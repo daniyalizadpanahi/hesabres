@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Balance</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: linear-gradient(135deg, #1e3c72, #007dd1);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background-color: #ffffff10;
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        position: relative;
+        width: 500px;
+      }
+
+      h1 {
+        color: #ffffff;
+        text-align: center;
+      }
+
+      .balance {
+        font-size: 36px;
+        color: #89ffff;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .currency {
+        font-size: 20px;
+        color: #ffffff;
+        text-align: center;
+      }
+
+      .action-button {
+        padding: 15px 30px;
+        font-size: 23px;
+        border: none;
+        border-radius: 12px;
+        background-color: #ffffff;
+        color: #000000;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 250px;
+        text-align: center;
+      }
+
+      .action-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .back-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background-color: #ffffff;
+        color: #000000;
+        font-weight: bold;
+        font-size: 20px;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .back-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button class="back-button" onclick="location.href='../index.html'">
+        بازگشت
+      </button>
+      <h1>موجودی کل مسجد</h1>
+      <div class="balance">1,250.75</div>
+      <div class="currency">تومان</div>
+      <button class="action-button" onclick="location.href='payment.html'">واریز یا برداشت</button>
+      <button class="action-button" onclick="location.href='report.html'">
+        گزارش
+      </button>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fa">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ورود</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: linear-gradient(135deg, #1e3c72, #007dd1);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background-color: #ffffff10;
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        width: 300px;
+      }
+
+      input {
+        padding: 12px;
+        font-size: 18px;
+        border: none;
+        border-radius: 10px;
+        background-color: #ffffff;
+        direction: ltr;
+      }
+
+      button {
+        padding: 15px 30px;
+        font-size: 20px;
+        border: none;
+        border-radius: 12px;
+        background-color: #ffffff;
+        color: #000000;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+      }
+
+      button:hover {
+        background-color: #89ffff;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      h2 {
+        color: white;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+
+      p {
+        color: rgb(255, 90, 90);
+        text-align: center;
+        font-weight: bold;
+        font-size: 20;
+      }
+    </style>
+  </head>
+
+  <body>
+    <form method="post" class="container">
+      {% csrf_token %}
+      <h2>ورود به سیستم</h2>
+      {% if error %}
+      <p>{{ error }}</p>
+      {% endif %}
+      <input type="text" name="username" placeholder="نام کاربری" required />
+      <input type="password" name="password" placeholder="رمز عبور" required />
+      <button type="submit">ورود</button>
+    </form>
+  </body>
+</html>

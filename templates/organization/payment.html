@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deposit & Withdrawal</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="payment.css" />
+  </head>
+  <body>
+    <div class="container">
+      <button class="back-button" onclick="location.href='menu.html'">
+        بازگشت
+      </button>
+      <h1>واریز یا برداشت</h1>
+
+      <!-- دکمه‌های واریز و برداشت -->
+      <button class="action-button" id="deposit-btn">واریز</button>
+      <button class="action-button" id="withdrawal-btn">برداشت</button>
+
+      <div id="transaction-form">
+        <label for="amount">: مبلغ</label>
+        <input type="text" id="amount" placeholder="مبلغ را وارد کنید" />
+      </div>
+
+      <div id="reason-container" style="display: none">
+        <label for="reason">علت برداشت</label>
+        <input type="text" id="reason" placeholder="علت برداشت را وارد کنید" />
+      </div>
+
+      <button class="action-button" id="submit-btn">ثبت</button>
+    </div>
+
+    <!-- Popup -->
+    <div class="popup" id="popup">
+      <div class="popup-content">
+        <h2>آیا مطمئن هستید؟</h2>
+        <p>آیا می‌خواهید این تراکنش را ثبت کنید؟</p>
+        <button class="popup-button" id="confirm-btn" onclick="location.href='menu.html'">تایید</button>
+        <button class="popup-button popup-cancel" id="cancel-btn">لغو</button>
+      </div>
+    </div>
+
+    <script>
+      const depositBtn = document.getElementById("deposit-btn");
+      const withdrawalBtn = document.getElementById("withdrawal-btn");
+      const submitBtn = document.getElementById("submit-btn");
+      const popup = document.getElementById("popup");
+      const confirmBtn = document.getElementById("confirm-btn");
+      const cancelBtn = document.getElementById("cancel-btn");
+      const reasonContainer = document.getElementById("reason-container");
+
+      // انتخاب واریز
+      depositBtn.addEventListener("click", function () {
+        document.getElementById("transaction-form").style.display = "block";
+        reasonContainer.style.display = "none"; // مخفی کردن علت برداشت
+        submitBtn.textContent = "ثبت واریز";
+      });
+
+      // انتخاب برداشت
+      withdrawalBtn.addEventListener("click", function () {
+        document.getElementById("transaction-form").style.display = "block";
+        reasonContainer.style.display = "block"; // نمایش علت برداشت
+        submitBtn.textContent = "ثبت برداشت";
+      });
+
+      submitBtn.addEventListener("click", function () {
+        const amount = document.getElementById("amount").value;
+        const reason = document.getElementById("reason").value;
+
+        if (!amount) {
+          alert("مبلغ را وارد کنید.");
+          return;
+        }
+
+        // باز کردن پاپ‌آپ تایید
+        popup.style.display = "flex";
+      });
+
+      confirmBtn.addEventListener("click", function () {
+        const amount = document.getElementById("amount").value;
+        const reason = document.getElementById("reason").value;
+
+        alert(
+          `تراکنش با مبلغ ${amount} تایید شد.${
+            reason ? ` دلیل برداشت: ${reason}` : ""
+          }`
+        );
+        popup.style.display = "none";
+        document.getElementById("amount").value = "";
+        document.getElementById("reason").value = "";
+        reasonContainer.style.display = "none"; // مخفی کردن فیلد علت برداشت
+      });
+
+      cancelBtn.addEventListener("click", function () {
+        popup.style.display = "none";
+      });
+
+      // Function to format number with commas
+      function formatAmount(amount) {
+        return amount.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
+
+      document.getElementById("amount").addEventListener("input", function (e) {
+        let value = e.target.value.replace(/,/g, ""); // Remove existing commas
+        // Ensure that only digits are entered
+        value = value.replace(/\D/g, "");
+        e.target.value = formatAmount(value); // Re-add commas
+      });
+    </script>
+  </body>
+</html>

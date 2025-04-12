@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>حساب ها</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/vazirmatn@33.003.0/Vazirmatn-font-face.css"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: linear-gradient(135deg, #1e3c72, #007dd1);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background-color: #ffffff10;
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        width: 80%;
+        max-width: 80%;
+      }
+
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
+
+      .top-bar button {
+        padding: 10px 20px;
+        font-size: 18px;
+        font-weight: bold;
+        border: none;
+        border-radius: 12px;
+        background-color: #ffffff;
+        color: #000000;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .top-bar button:hover {
+        background-color: #89ffff;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 3%;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: right;
+        font-size: 18px;
+      }
+      th {
+        background-color: #fcfcfc;
+        color: #000000;
+        font-size: 20px;
+        /* color: #fff; */
+      }
+      td {
+        color: #ffffff;
+        background-color: #ffffff20;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      tr:nth-child(even) td {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      tr:hover td {
+        background-color: #2a5298;
+        cursor: pointer;
+      }
+
+      .search-container {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .search-container input {
+        padding: 12px;
+        font-size: 18px;
+        width: 80%;
+        max-width: 400px;
+        border-radius: 10px;
+        border: none;
+        background-color: #ffffff;
+        color: #000000;
+      }
+
+      .highlight {
+        color: #a5f3fc;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="top-bar">
+        <button onclick="window.history.back()">بازگشت</button>
+        <div class="search-container">
+          <input
+            type="text"
+            id="search"
+            placeholder="جستجو بر اساس اسم یا شماره حساب"
+            oninput="searchTable()"
+          />
+        </div>
+      </div>
+
+      <table id="loanTable">
+        <thead>
+          <tr>
+            <th>شماره حساب</th>
+            <th>نام و نام خانوادگی</th>
+            <th>تاریخ افتتاح حساب</th>
+            <th>کد ملی</th>
+            <th>موجودی</th>
+            <th>فعال/غیرفعال</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr onclick="viewDetails('123456789')">
+            <td>123456789</td>
+            <td>محمود احمدی</td>
+            <td>1402/01/01</td>
+            <td>0012345678</td>
+            <td>25,000,000</td>
+            <td style="color: #4caf50; font-weight: bold">فعال</td>
+          </tr>
+          <tr onclick="viewDetails('987654321')">
+            <td>987654321</td>
+            <td>علی محمدی</td>
+            <td>1401/11/15</td>
+            <td>0087654321</td>
+            <td>8,000,000</td>
+            <td style="color: #f44336; font-weight: bold">غیرفعال</td>
+          </tr>
+          <tr onclick="viewDetails('112233445')">
+            <td>112233445</td>
+            <td>سارا نیکو</td>
+            <td>1402/03/10</td>
+            <td>0077889900</td>
+            <td>12,500,000</td>
+            <td style="color: #4caf50; font-weight: bold">فعال</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      function searchTable() {
+        const searchTerm = document
+          .getElementById("search")
+          .value.toLowerCase();
+        const rows = document.querySelectorAll("#loanTable tbody tr");
+        rows.forEach((row) => {
+          const cells = row.getElementsByTagName("td");
+          const name = cells[1].textContent.toLowerCase();
+          const account = cells[0].textContent.toLowerCase();
+
+          if (name.includes(searchTerm) || account.includes(searchTerm)) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      }
+
+      function viewDetails(accountNumber) {
+        window.location.href = `/details?account=${accountNumber}`;
+      }
+    </script>
+  </body>
+</html>

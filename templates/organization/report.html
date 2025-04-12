@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transaction Report</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background-color: #ffffff10;
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        position: relative;
+        width: 80%;
+        max-width: 900px;
+      }
+
+      h1 {
+        color: #ffffff;
+        text-align: center;
+      }
+
+      table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+        text-align: center;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        border: 1px solid #ffffff40;
+        color: #ffffff;
+      }
+
+      th {
+        background-color: #2a5298;
+        font-size: 20px;
+      }
+
+      td {
+        background-color: #ffffff20;
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .deposit {
+        color: #4caf50; /* سبز */
+      }
+
+      .withdrawal {
+        color: #f44336; /* قرمز */
+      }
+
+      .action-button {
+        padding: 15px 30px;
+        font-size: 23px;
+        border: none;
+        border-radius: 12px;
+        background-color: #ffffff;
+        color: #000000;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 250px;
+        text-align: center;
+      }
+
+      .action-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .back-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 20px;
+        font-weight: bold;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .back-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button
+        class="back-button"
+        onclick="location.href='../organization/menu.html'"
+      >
+        بازگشت
+      </button>
+      <h1>گزارش واریز و برداشت مسجد</h1>
+
+      <table>
+        <thead>
+          <tr>
+            <th>موجودی قبلی</th>
+            <th>موجودی جدید</th>
+            <th>برداشت یا واریز</th>
+            <th>علت برداشت</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1,500,000</td>
+            <td>1,450,000</td>
+            <td class="withdrawal">برداشت</td>
+            <td>خرید کالا</td>
+          </tr>
+          <tr>
+            <td>1,450,000</td>
+            <td>1,700,000</td>
+            <td class="deposit">واریز</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>1,700,000</td>
+            <td>1,600,000</td>
+            <td class="withdrawal">برداشت</td>
+            <td>پرداخت قبض</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>
