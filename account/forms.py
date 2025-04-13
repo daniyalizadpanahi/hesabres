@@ -6,25 +6,27 @@ class LoanForm(forms.ModelForm):
     class Meta:
         model = Loan
         fields = [
-            'borrower',
-            'amount',
-            'fees',
-            'guarantor_account',
-            'guarantor_name',
-            'paid_by',
-            'detail',
+            "borrower",
+            "amount",
+            "fees",
+            "guarantor_account",
+            "guarantor_name",
+            "paid_by",
+            "detail",
         ]
 
     def clean(self):
         cleaned_data = super().clean()
-        amount = cleaned_data.get('amount')
-        fees = cleaned_data.get('fees')
-        borrower = cleaned_data.get('borrower')
-        paid_by = cleaned_data.get('paid_by')
+        amount = cleaned_data.get("amount")
+        fees = cleaned_data.get("fees")
+        borrower = cleaned_data.get("borrower")
+        paid_by = cleaned_data.get("paid_by")
 
         # بررسی سقف وام
         if amount > 2_000_000 and not paid_by:
-            raise forms.ValidationError("برای وام بیشتر از ۲ میلیون، باید حساب پرداخت‌کننده مشخص شود.")
+            raise forms.ValidationError(
+                "برای وام بیشتر از ۲ میلیون، باید حساب پرداخت‌کننده مشخص شود."
+            )
 
         return cleaned_data
 
