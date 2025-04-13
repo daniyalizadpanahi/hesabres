@@ -2,24 +2,164 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Deposit & Withdrawal</title>
+    <title>Deposit & Withdraw</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="payment.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background-color: #ffffff10;
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        position: relative;
+        width: 500px;
+      }
+
+      h1 {
+        color: #ffffff;
+        text-align: center;
+      }
+
+      label {
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: bold;
+        text-align: right;
+      }
+
+      input,
+      select {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid #ffffff40;
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 20px;
+        font-weight: bold;
+        text-align: right;
+        margin-bottom: 15px;
+        width: 100%;
+      }
+
+      .action-button {
+        padding: 15px 30px;
+        font-size: 23px;
+        border: none;
+        border-radius: 12px;
+        background-color: #ffffff;
+        color: #000000;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 250px;
+        text-align: center;
+      }
+
+      .action-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .back-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 20px;
+        font-weight: bold;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .back-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .popup {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+      }
+
+      .popup-content {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        max-width: 400px;
+        width: 100%;
+      }
+
+      .popup-button {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        border-radius: 8px;
+        background-color: #4caf50;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .popup-button:hover {
+        background-color: #45a049;
+      }
+
+      .popup-cancel {
+        background-color: #f44336;
+      }
+
+      .popup-cancel:hover {
+        background-color: #e53935;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
-      <button class="back-button" onclick="location.href='menu.html'">
+      <button class="back-button" onclick="location.href='/organization'">
         بازگشت
       </button>
       <h1>واریز یا برداشت</h1>
 
-      <!-- دکمه‌های واریز و برداشت -->
       <button class="action-button" id="deposit-btn">واریز</button>
-      <button class="action-button" id="withdrawal-btn">برداشت</button>
+      <button class="action-button" id="withdraw-btn">برداشت</button>
 
       <div id="transaction-form">
         <label for="amount">: مبلغ</label>
@@ -34,82 +174,112 @@
       <button class="action-button" id="submit-btn">ثبت</button>
     </div>
 
-    <!-- Popup -->
     <div class="popup" id="popup">
       <div class="popup-content">
         <h2>آیا مطمئن هستید؟</h2>
         <p>آیا می‌خواهید این تراکنش را ثبت کنید؟</p>
-        <button class="popup-button" id="confirm-btn" onclick="location.href='menu.html'">تایید</button>
+        <button class="popup-button" id="confirm-btn">تایید</button>
         <button class="popup-button popup-cancel" id="cancel-btn">لغو</button>
       </div>
     </div>
 
     <script>
       const depositBtn = document.getElementById("deposit-btn");
-      const withdrawalBtn = document.getElementById("withdrawal-btn");
+      const withdrawBtn = document.getElementById("withdraw-btn");
       const submitBtn = document.getElementById("submit-btn");
       const popup = document.getElementById("popup");
       const confirmBtn = document.getElementById("confirm-btn");
       const cancelBtn = document.getElementById("cancel-btn");
       const reasonContainer = document.getElementById("reason-container");
 
-      // انتخاب واریز
-      depositBtn.addEventListener("click", function () {
+      const handleConfirmClick = () => {
+        const amount = document.getElementById("amount").value;
+        const reason = document.getElementById("reason").value;
+        const action =
+          submitBtn.textContent === "ثبت واریز" ? "deposit" : "withdraw"; // تعیین نوع عملیات
+        const inventoryType = "MOSQUE_DONATION";
+        const accountId = 1;
+        const data = {
+          amount: amount,
+          description: reason,
+          inventory_type: inventoryType,
+          account: accountId,
+        };
+
+        // لاگ داده‌ها قبل از ارسال درخواست
+
+        const csrfToken = document.querySelector("[name=csrf-token]").content;
+
+        fetch(`/api/inventory/${action}/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken,
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => {
+            return response.json();
+          })
+          .then((data) => {
+            if (data.error) {
+              console.error("Error:", data.error);
+              alert(`خطا: ${data.error}`);
+            } else {
+              window.location.href = "/organization";
+            }
+          })
+          .catch((error) => {
+            console.error("Error during fetch:", error);
+            alert("مشکلی پیش آمد. لطفاً دوباره امتحان کنید.");
+          })
+          .finally(() => {
+            popup.style.display = "none";
+            document.getElementById("amount").value = "";
+            document.getElementById("reason").value = "";
+            reasonContainer.style.display = "none";
+          });
+      };
+
+      depositBtn.addEventListener("click", () => {
         document.getElementById("transaction-form").style.display = "block";
-        reasonContainer.style.display = "none"; // مخفی کردن علت برداشت
+        reasonContainer.style.display = "none";
         submitBtn.textContent = "ثبت واریز";
       });
 
-      // انتخاب برداشت
-      withdrawalBtn.addEventListener("click", function () {
+      withdrawBtn.addEventListener("click", () => {
         document.getElementById("transaction-form").style.display = "block";
-        reasonContainer.style.display = "block"; // نمایش علت برداشت
+        reasonContainer.style.display = "block";
         submitBtn.textContent = "ثبت برداشت";
       });
 
-      submitBtn.addEventListener("click", function () {
+      submitBtn.addEventListener("click", () => {
         const amount = document.getElementById("amount").value;
-        const reason = document.getElementById("reason").value;
 
         if (!amount) {
           alert("مبلغ را وارد کنید.");
           return;
         }
 
-        // باز کردن پاپ‌آپ تایید
         popup.style.display = "flex";
+
+        confirmBtn.removeEventListener("click", handleConfirmClick); // حذف event listener قبلی
+        confirmBtn.addEventListener("click", handleConfirmClick); // افزودن event listener جدید
       });
 
-      confirmBtn.addEventListener("click", function () {
-        const amount = document.getElementById("amount").value;
-        const reason = document.getElementById("reason").value;
-
-        alert(
-          `تراکنش با مبلغ ${amount} تایید شد.${
-            reason ? ` دلیل برداشت: ${reason}` : ""
-          }`
-        );
-        popup.style.display = "none";
-        document.getElementById("amount").value = "";
-        document.getElementById("reason").value = "";
-        reasonContainer.style.display = "none"; // مخفی کردن فیلد علت برداشت
-      });
-
-      cancelBtn.addEventListener("click", function () {
+      cancelBtn.addEventListener("click", () => {
         popup.style.display = "none";
       });
 
-      // Function to format number with commas
+      document.getElementById("amount").addEventListener("input", (e) => {
+        let value = e.target.value.replace(/,/g, "");
+        value = value.replace(/\D/g, "");
+        e.target.value = formatAmount(value);
+      });
+
       function formatAmount(amount) {
         return amount.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       }
-
-      document.getElementById("amount").addEventListener("input", function (e) {
-        let value = e.target.value.replace(/,/g, ""); // Remove existing commas
-        // Ensure that only digits are entered
-        value = value.replace(/\D/g, "");
-        e.target.value = formatAmount(value); // Re-add commas
-      });
     </script>
   </body>
 </html>

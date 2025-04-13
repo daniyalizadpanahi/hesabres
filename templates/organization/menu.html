@@ -105,7 +105,7 @@
       <h1>موجودی کل مسجد</h1>
       <div class="balance" id="balance">0</div> <!-- Default value of 0 -->
       <div class="currency">تومان</div>
-      <button class="action-button" onclick="location.href='payment.html'">واریز یا برداشت</button>
+      <button class="action-button" onclick="location.href='organization/payment'">واریز یا برداشت</button>
       <button class="action-button" onclick="location.href='report.html'">
         گزارش
       </button>
@@ -117,7 +117,7 @@
         .then((response) => response.json()) // Parse the JSON response
         .then((data) => {
           const balanceElement = document.getElementById("balance");
-          const totalAmount = data.total_org_donations || NaN; // Default to 0 if no amount is found
+          const totalAmount = data.total_org_donations || 0; // Default to 0 if no amount is found
 
           // Update the balance display with the fetched total
           balanceElement.textContent = totalAmount.toLocaleString(); // Format the number with commas
