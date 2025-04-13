@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -77,6 +78,7 @@ class Inventory(models.Model):
         LOAN_FUNDS = "LOAN_FUNDS", "Loan Funds"  # صندوق های وام
 
     inventory_type = models.CharField(max_length=20, choices=InventoryType.choices)
+    prev_amount = models.BigIntegerField(default=0)
     amount = models.BigIntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -111,6 +113,13 @@ class Inventory(models.Model):
         else:
             raise ValueError("Insufficient funds")
 
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.prev_amount = self.amount
+        else:
+            self.prev_amount = self.amount + self.prev_amount
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Inventory {self.inventory_type} - Amount: {self.amount}"
 
@@ -119,9 +128,6 @@ class Transaction(models.Model):
     class TransactionType(models.TextChoices):
         DEPOSIT = "DEPOSIT", "Deposit"  # واریز
         WITHDRAW = "WITHDRAW", "Withdraw"  # برداشت
-        LOAN_DISBURSE = "LOAN_DISBURSE", "Loan Disbursement"  # پرداخت وام
-        LOAN_REPAYMENT = "LOAN_REPAYMENT", "Loan Repayment"  # بازپرداخت وام
-        DONATION = "DONATION", "Donation"  # اهدا / کمک مالی
         FEE = "FEE", "Fee"  # هزینه / کارمزد
 
     account = models.ForeignKey(
@@ -132,12 +138,31 @@ class Transaction(models.Model):
         related_name="trans_account",
     )
     amount = models.BigIntegerField()
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.DO_NOTHING,
+        related_name="activity",
+        null=True,
+        blank=True,
+    )
     type = models.CharField(max_length=20, choices=TransactionType.choices)
     description = models.TextField(blank=True, null=True)
+    mosque_donation = models.BooleanField(default=False)
+    needy_donation = models.BooleanField(default=False)
+    loan = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Transaction {self.type} of {self.amount} for account {self.account.account_number}"
+
+    def clean(self):
+        if self.account is None:
+            if not self.mosque_donation and not self.needy_donation:
+                raise ValidationError(
+                    "Either mosque_donation or needy_donation must be True when account is None."
+                )
+
+        super().clean()
 
 
 class Loan(models.Model):
