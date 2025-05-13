@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ساخت حساب کاربری</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/vazirmatn@33.003.0/Vazirmatn-font-face.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@webpersian/persian-datepicker@1.2.0/dist/persian-datepicker.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        background-color: #ffffff10;
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 700px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      h2 {
+        text-align: center;
+        color: #fff;
+        font-size: 24px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #fff;
+        padding-bottom: 10px;
+      }
+
+      .info-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      input,
+      select {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        background-color: #ffffffdd;
+        color: #000;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      .save-button {
+        align-self: flex-end;
+        background-color: #00e0d3;
+        color: #000;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+
+      .save-button:hover {
+        background-color: #00b7ac;
+      }
+
+      .back-button {
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 20px;
+        font-weight: bold;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+      }
+
+      .back-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      }
+      ::placeholder {
+        color: rgb(0,0,0);
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button class="back-button" onclick="window.history.back()">
+        ← بازگشت
+      </button>
+      <h2>ساخت حساب کاربری جدید</h2>
+
+      <div class="info-row">
+        <input id="name" placeholder="نام" />
+        <input id="last-name" placeholder="نام خانوادگی" />
+      </div>
+      <div class="info-row">
+        <input id="father-name" placeholder="نام پدر" />
+        <input id="national-id" placeholder="کد ملی" />
+      </div>
+      <div class="info-row">
+        <input id="address" placeholder="آدرس" />
+      </div>
+      <div class="info-row">
+        <input id="phone" placeholder="تلفن" />
+        <input id="postal-code" placeholder="کد پستی" />
+      </div>
+      <div class="info-row">
+        <input id="account-number" placeholder="شماره حساب" />
+        <input id="balance" placeholder="موجودی" />
+      </div>
+      <div class="info-row">
+        <input id="personal-details" placeholder="جزئیات مربوط به فرد" />
+      </div>
+      <div class="info-row">
+        <input id="account-details" placeholder="جزئیات مربوط به حساب" />
+      </div>
+      <button class="save-button" onclick="createAccount()">
+        ➕ ایجاد حساب
+      </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@webpersian/persian-date@1.0.6/dist/persian-date.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@webpersian/persian-datepicker@1.2.0/dist/persian-datepicker.min.js"></script>
+
+    <script>
+      new PersianDatepicker(document.getElementById("birthdate"), {
+        format: "YYYY/MM/DD",
+        initialValue: false,
+      });
+
+      function getCSRFToken() {
+        return document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("csrftoken="))
+          ?.split("=")[1];
+      }
+
+      function createAccount() {
+        const body = {
+          user: {
+            name: document.getElementById("name").value,
+            last_name: document.getElementById("last-name").value,
+            father_name: document.getElementById("father-name").value,
+            national_id: document.getElementById("national-id").value,
+            address: document.getElementById("address").value,
+            phone: document.getElementById("phone").value,
+            postal_code: document.getElementById("postal-code").value,
+            personal_details: document.getElementById("personal-details").value,
+            account_number: document.getElementById("account-number").value,
+            balance: document.getElementById("balance").value,
+            account_details: document.getElementById("account-details").value,
+          },
+        };
+
+        fetch("/api/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(),
+          },
+          body: JSON.stringify(body),
+        })
+          .then(async (res) => {
+            if (!res.ok) {
+              const errorData = await res.json();
+              throw new Error(errorData.error || "خطا در ایجاد حساب");
+            }
+            return res.json();
+          })
+          .then(() => {
+            alert("حساب با موفقیت ایجاد شد");
+            window.location.href = "/cash_box";
+          })
+          .catch((err) => alert(err.message));
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchUsers);
+    </script>
+  </body>
+</html>
