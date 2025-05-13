@@ -8,6 +8,8 @@
       href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap"
       rel="stylesheet"
     />
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment-jalaali@0.9.1/build/moment-jalaali.min.js"></script>
     <style>
       * {
         margin: 0;
@@ -36,11 +38,14 @@
         position: relative;
         width: 80%;
         max-width: 900px;
+        overflow-y: auto;
+        max-height: 80vh;
       }
 
       h1 {
         color: #ffffff;
         text-align: center;
+        font-size: 24px;
       }
 
       table {
@@ -48,32 +53,45 @@
         margin-top: 20px;
         border-collapse: collapse;
         text-align: center;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
       }
 
       th,
       td {
-        padding: 12px;
-        border: 1px solid #ffffff40;
+        padding: 12px 20px;
         color: #ffffff;
+        font-size: 16px;
+        border: 1px solid #ffffff33;
+        text-align: center;
       }
 
       th {
-        background-color: #2a5298;
-        font-size: 20px;
+        background-color: #3e57a7;
+        font-weight: bold;
+        text-transform: uppercase;
       }
 
       td {
-        background-color: #ffffff20;
-        font-size: 20px;
-        font-weight: bold;
+        background-color: #2e3b6b;
+      }
+
+      tr:nth-child(even) td {
+        background-color: #3a4b82;
+      }
+
+      tr:hover td {
+        background-color: #556f9a;
+        cursor: pointer;
       }
 
       .deposit {
-        color: #4caf50; /* سبز */
+        color: #4caf50;
       }
 
-      .withdrawal {
-        color: #f44336; /* قرمز */
+      .withdraw {
+        color: #f44336;
       }
 
       .action-button {
@@ -120,10 +138,7 @@
   </head>
   <body>
     <div class="container">
-      <button
-        class="back-button"
-        onclick="location.href='../organization/menu.html'"
-      >
+      <button class="back-button" onclick="location.href='/organization'">
         بازگشت
       </button>
       <h1>گزارش واریز و برداشت مسجد</h1>
@@ -131,33 +146,86 @@
       <table>
         <thead>
           <tr>
-            <th>موجودی قبلی</th>
+            <th>علت</th>
             <th>موجودی جدید</th>
+            <th>موجودی قبلی</th>
             <th>برداشت یا واریز</th>
-            <th>علت برداشت</th>
+            <th>مبلغ</th>
+            <th>تاریخ</th>
+            <th>شماره</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>1,500,000</td>
-            <td>1,450,000</td>
-            <td class="withdrawal">برداشت</td>
-            <td>خرید کالا</td>
-          </tr>
-          <tr>
-            <td>1,450,000</td>
-            <td>1,700,000</td>
-            <td class="deposit">واریز</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <td>1,700,000</td>
-            <td>1,600,000</td>
-            <td class="withdrawal">برداشت</td>
-            <td>پرداخت قبض</td>
-          </tr>
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
+
+    <script>
+      async function fetchData() {
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/report/donation/"
+        );
+        const data = await response.json();
+        populateTable(data.reports);
+      }
+
+      function populateTable(reports) {
+        const tableBody = document.querySelector("tbody");
+
+        let transactions = [];
+
+        // دریافت تراکنش‌ها از دیتای API
+        reports.forEach((report) => {
+          transactions.push(report);
+        });
+
+        let previousBalance = 0;
+        let rowIndex = 1;
+
+        // محاسبه موجودی قبلی و جدید از قدیمی‌ترین به جدیدترین تراکنش‌ها
+        for (let i = 0; i < transactions.length; i++) {
+          const report = transactions[i];
+
+          // تبدیل تاریخ میلادی به تاریخ شمسی
+          const createdAt = moment(report.created_at).format("jYYYY/jMM/jDD"); // فرمت شمسی
+
+          // محاسبه موجودی جدید
+          const newBalance =
+            report.type === "WITHDRAW"
+              ? previousBalance - report.amount
+              : previousBalance + report.amount;
+
+          // ایجاد ردیف جدید در جدول
+          const newRow = document.createElement("tr");
+          newRow.innerHTML = `
+          <td>${report.description || "-"}</td> <!-- علت -->
+            <td>${formatNumber(newBalance)}</td> <!-- موجودی جدید -->
+            <td>${formatNumber(previousBalance)}</td> <!-- موجودی قبلی -->
+            <td class="${report.type === "WITHDRAW" ? "withdraw" : "deposit"}">
+              ${report.type === "WITHDRAW" ? "برداشت" : "واریز"}
+            </td>
+            <td>${formatNumber(report.amount)}</td> <!-- مبلغ -->
+            <td>${createdAt}</td> <!-- تاریخ شمسی -->
+            <td>${rowIndex}</td> <!-- شماره ردیف -->
+          `;
+
+          // اضافه کردن ردیف جدید به جدول
+          tableBody.appendChild(newRow);
+
+          // به‌روزرسانی موجودی قبلی برای تراکنش بعدی
+          previousBalance = newBalance;
+          rowIndex++; // شماره ردیف افزوده می‌شود
+        }
+
+        // معکوس کردن ردیف‌ها برای نمایش از جدید به قدیم
+        const rows = Array.from(tableBody.children);
+        rows.reverse().forEach((row) => tableBody.appendChild(row));
+      }
+
+      function formatNumber(number) {
+        return number.toLocaleString();
+      }
+
+      fetchData();
+    </script>
   </body>
 </html>
