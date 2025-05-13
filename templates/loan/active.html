@@ -2,8 +2,7 @@
 <html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>وام های در جریان</title>
+    <title>لیست وام‌ها</title>
     <link
       href="https://cdn.jsdelivr.net/npm/vazirmatn@33.003.0/Vazirmatn-font-face.css"
       rel="stylesheet"
@@ -13,103 +12,129 @@
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        font-weight: bold;
       }
+
       body {
         font-family: "Vazirmatn", sans-serif;
         background: linear-gradient(135deg, #1e3c72, #007dd1);
-        height: 100vh;
+        min-height: 100vh;
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
+        padding: 40px 0;
       }
 
       .container {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 30px;
         background-color: #ffffff10;
         padding: 40px;
         border-radius: 20px;
         backdrop-filter: blur(10px);
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-        width: 80%;
-        max-width: 80%;
+        width: 95%;
+        max-width: 1300px;
       }
 
       .top-bar {
         display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
         justify-content: space-between;
         align-items: center;
-        width: 100%;
+      }
+
+      .search-container {
+        flex: 1;
+        min-width: 300px;
+        display: flex;
+        gap: 10px;
+      }
+
+      .search-container input,
+      .search-container select {
+        padding: 12px;
+        font-size: 20px;
+        border-radius: 10px;
+        border: 2px solid #34495e;
+        background-color: #ffffff;
+        color: #333;
+        flex: 1;
       }
 
       .top-bar button {
-        padding: 10px 20px;
-        font-size: 18px;
+        padding: 12px 25px;
+        font-size: 20px;
         font-weight: bold;
         border: none;
-        border-radius: 12px;
+        border-radius: 10px;
         background-color: #ffffff;
-        color: #000000;
+        color: #333;
         cursor: pointer;
         transition: all 0.3s ease;
       }
+
       .top-bar button:hover {
-        background-color: #89ffff;
+        background-color: #1e90ff;
         transform: translateY(-3px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 3%;
+        margin-top: 20px;
       }
+
       th,
       td {
-        padding: 12px;
-        text-align: right;
-        font-size: 18px;
-      }
-      th {
-        background-color: #fcfcfc;
-        color: #000000;
-        font-size: 20px;
-        /* color: #fff; */
-      }
-      td {
-        color: #ffffff;
-        background-color: #ffffff20;
-        font-size: 20px;
-        font-weight: bold;
-      }
-      tr:nth-child(even) td {
-        background-color: rgba(255, 255, 255, 0.2);
-      }
-      tr:hover td {
-        background-color: #2a5298;
-        cursor: pointer;
-      }
-
-      .search-container {
-        margin-bottom: 20px;
+        padding: 16px 12px;
         text-align: center;
+        font-size: 19px;
       }
 
-      .search-container input {
-        padding: 12px;
-        font-size: 18px;
-        width: 80%;
-        max-width: 400px;
-        border-radius: 10px;
+      th {
+        background-color: #3e57a7;
+        color: #ffffff;
+        border-radius: 8px;
+      }
+
+      td {
+        color: #fff;
+        background-color: #2e3b6b;
+        font-weight: 500;
+        border-radius: 8px;
+      }
+
+      tr:nth-child(even) td {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      tr:hover td {
+        background-color: #2980b9;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .action-btn {
+        margin: 0 5px;
+        padding: 6px 12px;
         border: none;
-        background-color: #ffffff;
-        color: #000000;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
       }
 
-      .highlight {
-        color: #a5f3fc;
-        font-weight: bold;
+      .edit-btn {
+        background-color: #facc15;
+        color: #222;
+      }
+
+      .delete-btn {
+        background-color: #f87171;
+        color: white;
       }
     </style>
   </head>
@@ -121,88 +146,110 @@
           <input
             type="text"
             id="search"
-            placeholder="جستجو بر اساس اسم یا شماره حساب"
-            oninput="searchTable()"
+            placeholder="جستجو بر اساس نام، کد ملی، مبلغ"
+            oninput="searchLoans()"
           />
+          <select id="statusFilter" onchange="searchLoans()">
+            <option value="all">همه وضعیت‌ها</option>
+            <option value="active">فقط فعال</option>
+            <option value="inactive">فقط غیرفعال</option>
+          </select>
         </div>
       </div>
 
-      <table id="loanTable">
+      <table id="loansTable">
         <thead>
           <tr>
-            <th>شماره حساب</th>
-            <th>اسم</th>
-            <th>قسط های باقی مانده</th>
-            <th>تعداد وام‌های دریافتی</th>
-            <th>تعداد قسط‌های باقی‌مانده</th>
-            <th>تاریخ گرفتن وام</th>
-            <th>تاریخ پرداخت قسط</th>
+            <th>ردیف</th>
+            <th>نام</th>
+            <th>کد ملی</th>
+            <th>مبلغ کل</th>
+            <th>پرداخت‌شده</th>
+            <th>قسط ماهانه</th>
+            <th>ماه‌های پرداخت‌شده</th>
+            <th>وضعیت</th>
+            <th>عملیات</th>
           </tr>
         </thead>
-        <tbody>
-          <tr onclick="viewDetails('123456789')">
-            <td>123456789</td>
-            <td>محمود احمدی</td>
-            <td>12,000,000 تومان</td>
-            <td>3</td>
-            <td>5</td>
-            <td>1402/01/15</td>
-            <td>1402/06/15</td>
-          </tr>
-          <tr onclick="viewDetails('987654321')">
-            <td>987654321</td>
-            <td>علی محمدی</td>
-            <td>8,500,000 تومان</td>
-            <td>1</td>
-            <td>2</td>
-            <td>1401/09/10</td>
-            <td>1402/03/10</td>
-          </tr>
-          <tr onclick="viewDetails('112233445')">
-            <td>112233445</td>
-            <td>سارا نیکو</td>
-            <td>5,000,000 تومان</td>
-            <td>2</td>
-            <td>4</td>
-            <td>1402/02/20</td>
-            <td>1402/07/20</td>
-          </tr>
-          <tr onclick="viewDetails('556677889')">
-            <td>556677889</td>
-            <td>کمیل نوروزی</td>
-            <td>15,000,000 تومان</td>
-            <td>4</td>
-            <td>6</td>
-            <td>1402/03/05</td>
-            <td>1402/08/05</td>
-          </tr>
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
 
     <script>
-      function searchTable() {
-        const searchTerm = document
-          .getElementById("search")
-          .value.toLowerCase();
-        const rows = document.querySelectorAll("#loanTable tbody tr");
-        rows.forEach((row) => {
-          const cells = row.getElementsByTagName("td");
-          const name = cells[1].textContent.toLowerCase();
-          const account = cells[0].textContent.toLowerCase();
+      let loans = [];
 
-          if (name.includes(searchTerm) || account.includes(searchTerm)) {
-            row.style.display = "";
-          } else {
-            row.style.display = "none";
-          }
+      function searchLoans() {
+        const searchValue = document.getElementById("search").value.toLowerCase();
+        const status = document.getElementById("statusFilter").value;
+
+        const filtered = loans.filter((l) => {
+          const matchesSearch =
+            l.borrower.name.toLowerCase().includes(searchValue) ||
+            l.borrower.national_id.includes(searchValue) ||
+            l.amount.toString().includes(searchValue);
+
+          const matchesStatus =
+            status === "all" ||
+            (status === "active" && l.is_active) ||
+            (status === "inactive" && !l.is_active);
+
+          return matchesSearch && matchesStatus;
+        });
+
+        renderTable(filtered);
+      }
+
+      function renderTable(data) {
+        const tbody = document.querySelector("#loansTable tbody");
+        tbody.innerHTML = "";
+        data.forEach((item, index) => {
+          const row = `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${item.borrower.name}</td>
+              <td>${item.borrower.national_id}</td>
+              <td>${Number(item.amount).toLocaleString()}</td>
+              <td>${Number(item.disbursed_amount).toLocaleString()}</td>
+              <td>${Number(item.monthly_installment).toLocaleString()}</td>
+              <td>${item.paid_months}</td>
+              <td style="color:${item.is_active ? '#2ecc71' : '#e74c3c'}; font-weight:bold">
+                ${item.is_active ? "فعال" : "غیرفعال"}
+              </td>
+              <td>
+                <button class="action-btn edit-btn" onclick="editLoan(${item.id})">ویرایش</button>
+                <button class="action-btn delete-btn" onclick="deleteLoan(${item.id})">حذف</button>
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
         });
       }
 
-      function viewDetails(accountNumber) {
-        // برای نمایش جزئیات، شماره حساب به URL اضافه می‌شود
-        window.location.href = `/details?account=${accountNumber}`;
+      function editLoan(id) {
+        window.location.href = `/loans/edit/${id}`;
       }
+
+      async function deleteLoan(id) {
+        if (!confirm("آیا مطمئن هستید که می‌خواهید این وام را حذف کنید؟")) return;
+        const res = await fetch(`http://127.0.0.1:8000/api/loans/${id}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          loans = loans.filter((l) => l.id !== id);
+          searchLoans();
+        } else {
+          alert("خطا در حذف وام");
+        }
+      }
+
+      async function fetchLoans() {
+        const res = await fetch("http://127.0.0.1:8000/api/loans");
+        const data = await res.json();
+        loans = data;
+        renderTable(loans);
+      }
+
+      fetchLoans();
     </script>
   </body>
 </html>
