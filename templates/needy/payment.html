@@ -198,13 +198,13 @@
         const action =
           submitBtn.textContent === "ثبت واریز" ? "deposit" : "withdraw"; // تعیین نوع عملیات
         const inventoryType = "NEEDY_DONATION";
-        const accountId = 1;
+        const type = "needy";
 
         const data = {
           amount: amount,
           description: reason,
           inventory_type: inventoryType,
-          account: accountId,
+          type: type,
         };
 
         const csrfToken = document.querySelector("[name=csrf-token]").content;
