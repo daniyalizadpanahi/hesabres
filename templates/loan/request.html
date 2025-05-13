@@ -1,11 +1,286 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ثبت وام جدید</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/vazirmatn@33.003.0/Vazirmatn-font-face.css"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: linear-gradient(135deg, #1e3c72, #007dd1);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .container {
+        background-color: #ffffff10;
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 750px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      h2 {
+        text-align: center;
+        color: #fff;
+        font-size: 24px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #fff;
+        padding-bottom: 10px;
+      }
+      .info-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      input,
+      textarea {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        background-color: #ffffffdd;
+        color: #000;
+        font-size: 16px;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 60px;
+      }
+      .save-button {
+        align-self: flex-end;
+        background-color: #00e0d3;
+        color: #000;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+      .save-button:hover {
+        background-color: #00b7ac;
+      }
+      .back-button {
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 20px;
+        font-weight: bold;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+      }
+      .back-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      }
+      .dropdown {
+        position: relative;
+        width: 100%;
+      }
+      .dropdown-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        display: none;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1;
+      }
+      .dropdown-item {
+        padding: 12px;
+        cursor: pointer;
+      }
+      .dropdown-item:hover {
+        background-color: #f1f1f1;
+      }
+      .dropdown.active .dropdown-list {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button class="back-button" onclick="window.history.back()">← بازگشت</button>
+      <h2>ثبت وام جدید</h2>
+
+      <div class="dropdown" id="borrower-dropdown">
+        <input
+          id="borrower-input"
+          placeholder="انتخاب وام‌گیرنده"
+          readonly
+          onclick="toggleDropdown('borrower')"
+        />
+        <div class="dropdown-list" id="borrower-list">
+          <input
+            placeholder="جستجو وام‌گیرنده"
+            oninput="filterUsers('borrower')"
+          />
+          <div id="borrower-items"></div>
+        </div>
+      </div>
+
+      <div class="dropdown" id="guarantor-dropdown">
+        <input
+          id="guarantor-input"
+          placeholder="انتخاب ضامن (اختیاری)"
+          readonly
+          onclick="toggleDropdown('guarantor')"
+        />
+        <div class="dropdown-list" id="guarantor-list">
+          <input
+            placeholder="جستجو ضامن"
+            oninput="filterUsers('guarantor')"
+          />
+          <div id="guarantor-items"></div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <input id="amount" placeholder="مبلغ وام" />
+        <input id="disbursed-amount" placeholder="مبلغ پرداخت‌شده" />
+      </div>
+
+      <div class="info-row">
+        <input id="monthly-installment" placeholder="مبلغ قسط ماهانه" />
+        <input id="total-months" placeholder="تعداد ماه‌ها" />
+      </div>
+
+      <div class="info-row">
+        <input id="paid-months" placeholder="ماه‌های پرداخت‌شده" />
+        <input id="fees" placeholder="کارمزد" />
+      </div>
+
+      <div class="info-row">
+        <input id="blocked-from-guarantor" placeholder="مسدود از ضامن؟ true/false" />
+        <input id="is-active" placeholder="فعال؟ true/false" />
+      </div>
+
+      <textarea id="guarantor-info" placeholder="اطلاعات ضامن"></textarea>
+      <textarea id="detail" placeholder="جزئیات وام"></textarea>
+      <textarea id="system-message" placeholder="پیام سیستم"></textarea>
+
+      <button class="save-button" onclick="submitLoan()">ثبت وام</button>
+    </div>
+
+    <script>
+      let users = [];
+      let selectedBorrowerId = null;
+      let selectedGuarantorId = null;
+
+      async function fetchUsers() {
+        try {
+          const res = await fetch("http://127.0.0.1:8000/api/users");
+          users = await res.json();
+          renderUserList("borrower", users);
+          renderUserList("guarantor", users);
+        } catch (err) {
+          alert("خطا در دریافت کاربران");
+        }
+      }
+
+      function toggleDropdown(role) {
+        document.getElementById(`${role}-list`).classList.toggle("active");
+      }
+
+      function renderUserList(role, data) {
+        const container = document.getElementById(`${role}-items`);
+        container.innerHTML = "";
+        data.forEach((user) => {
+          const div = document.createElement("div");
+          div.className = "dropdown-item";
+          div.innerText = `${user.name} - ${user.national_id}`;
+          div.onclick = () => {
+            document.getElementById(`${role}-input`).value = user.name;
+            role === "borrower"
+              ? (selectedBorrowerId = user.id)
+              : (selectedGuarantorId = user.id);
+            document.getElementById(`${role}-list`).classList.remove("active");
+          };
+          container.appendChild(div);
+        });
+      }
+
+      function filterUsers(role) {
+        const keyword = document
+          .querySelector(`#${role}-list input`)
+          .value.trim();
+        const filtered = users.filter(
+          (u) => u.name.includes(keyword) || u.national_id.includes(keyword)
+        );
+        renderUserList(role, filtered);
+      }
+
+      function getCSRFToken() {
+        return document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("csrftoken="))
+          ?.split("=")[1];
+      }
+
+      function submitLoan() {
+        const body = {
+          borrower: selectedBorrowerId,
+          guarantor: selectedGuarantorId,
+          guarantor_info: document.getElementById("guarantor-info").value,
+          amount: document.getElementById("amount").value,
+          disbursed_amount: document.getElementById("disbursed-amount").value,
+          monthly_installment: document.getElementById("monthly-installment").value,
+          total_months: document.getElementById("total-months").value,
+          paid_months: document.getElementById("paid-months").value,
+          fees: document.getElementById("fees").value,
+          blocked_from_guarantor:
+            document.getElementById("blocked-from-guarantor").value === "true",
+          is_active: document.getElementById("is-active").value === "true",
+          detail: document.getElementById("detail").value,
+          system_message: document.getElementById("system-message").value,
+        };
+
+        fetch("/api/loans", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(),
+          },
+          body: JSON.stringify(body),
+        })
+          .then(async (res) => {
+            if (!res.ok) {
+              const errorData = await res.json();
+              throw new Error(errorData.error || "خطا در ثبت وام");
+            }
+            return res.json();
+          })
+          .then(() => {
+            alert("وام با موفقیت ثبت شد");
+            window.location.href = "/loans";
+          })
+          .catch((err) => alert(err.message));
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchUsers);
+    </script>
+  </body>
 </html>
