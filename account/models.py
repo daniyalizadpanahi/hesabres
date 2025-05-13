@@ -5,6 +5,7 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
+from django.shortcuts import get_object_or_404
 
 
 class CustomUserManager(BaseUserManager):
@@ -55,7 +56,7 @@ class Account(models.Model):
         CustomUser, on_delete=models.DO_NOTHING, related_name="acc_user"
     )
     signature = models.ForeignKey(
-        CustomUser, on_delete=models.DO_NOTHING, related_name="acc_signature"
+        CustomUser, on_delete=models.DO_NOTHING, related_name="acc_signature",
     )  # حق امضا
     account_number = models.CharField(max_length=200, unique=True)
     balance = models.BigIntegerField(default=0)
@@ -63,6 +64,7 @@ class Account(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     detail = models.TextField(null=True, blank=True)
     system_message = models.TextField(null=True, blank=True)
+    account_img = models.ImageField(upload_to='accounts/', null=True, blank=True)
 
     def __str__(self):
         return (
@@ -82,36 +84,68 @@ class Inventory(models.Model):
     amount = models.BigIntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def deposit(self, amount, account=None, description=""):
+    def deposit(self, amount, type=None, account_id=None, description=""):
+        if type is None and account_id is None:
+            raise ValueError("Invalid deposit: type and account cannot both be None")
+
+        if account_id:
+            account = get_object_or_404(Account, id=account_id)
+            account.balance = amount + account.balance
+            account.save()
+        else:
+            account = None
+
         self.amount += amount
         self.save()
 
-        if not account:
-            account = None
-
-        Transaction.objects.create(
+        trans = Transaction.objects.create(
             account=account,
             amount=amount,
             type=Transaction.TransactionType.DEPOSIT,
             description=description,
         )
 
-    def withdraw(self, amount, account=None, description=""):
-        if self.amount >= amount:
-            self.amount -= amount
-            self.save()
+        if type == "needy":
+            trans.needy_donation = True
+        elif type == "mosque":
+            trans.mosque_donation = True
+        elif type == "loan":
+            trans.loan = True
 
-            if not account:
-                account = None
+        trans.save()
 
-            Transaction.objects.create(
-                account=account,
-                amount=amount,
-                type=Transaction.TransactionType.WITHDRAW,
-                description=description,
-            )
-        else:
+    def withdraw(self, amount, type=None, account_id=None, description=""):
+        if self.amount < amount:
             raise ValueError("Insufficient funds")
+
+        if type is None and account_id is None:
+            raise ValueError("Invalid withdrawal: type and account cannot both be None")
+
+        if account_id:
+            account = get_object_or_404(Account, id=account_id)
+            account.balance = amount - account.balance
+            account.save()
+        else:
+            account = None
+            
+        self.amount -= amount
+        self.save()
+
+        trans = Transaction.objects.create(
+            account=account,
+            amount=amount,
+            type=Transaction.TransactionType.WITHDRAW,
+            description=description,
+        )
+
+        if type == "needy":
+            trans.needy_donation = True
+        elif type == "mosque":
+            trans.mosque_donation = True
+        elif type == "loan":
+            trans.loan = True
+
+        trans.save()
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -138,13 +172,6 @@ class Transaction(models.Model):
         related_name="trans_account",
     )
     amount = models.BigIntegerField()
-    account = models.ForeignKey(
-        Account,
-        on_delete=models.DO_NOTHING,
-        related_name="activity",
-        null=True,
-        blank=True,
-    )
     type = models.CharField(max_length=20, choices=TransactionType.choices)
     description = models.TextField(blank=True, null=True)
     mosque_donation = models.BooleanField(default=False)
@@ -153,14 +180,20 @@ class Transaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Transaction {self.type} of {self.amount} for account {self.account.account_number}"
+        account = self.account.account_number if self.account else None
+        return f"Transaction {self.type} of {self.amount} for account {account}"
 
     def clean(self):
-        if self.account is None:
-            if not self.mosque_donation and not self.needy_donation:
-                raise ValidationError(
-                    "Either mosque_donation or needy_donation must be True when account is None."
-                )
+        true_fields = sum([self.mosque_donation, self.needy_donation, self.loan])
+
+        if true_fields > 1:
+            raise ValidationError(
+                "Only one of mosque_donation, needy_donation, or loan can be True."
+            )
+        if true_fields == 0 and self.account == None:
+            raise ValidationError(
+                "At least one of mosque_donation, needy_donation, or loan must be True."
+            )
 
         super().clean()
 
