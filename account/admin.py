@@ -17,7 +17,7 @@ class CustomUserAdmin(admin.ModelAdmin):
 
 
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ("account_number", "user", "balance", "is_active", "created_at")
+    list_display = ("pk", "account_number", "user", "balance", "is_active", "created_at")
     search_fields = ("account_number", "user__national_id")
     list_filter = ("is_active",)
 
@@ -28,9 +28,19 @@ class InventoryAdmin(admin.ModelAdmin):
 
 
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ("account", "amount", "type", "created_at", "description")
+    list_display = (
+        "account",
+        "amount",
+        "type",
+        "created_at",
+        "description",
+        "mosque_donation",
+        "needy_donation",
+        "loan",
+    )
     search_fields = ("account__account_number", "type")
     list_filter = ("type",)
+    list_editable = ("mosque_donation", "needy_donation", "loan")
 
 
 class LoanAdmin(admin.ModelAdmin):
