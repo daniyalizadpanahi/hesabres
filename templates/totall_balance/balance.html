@@ -109,7 +109,7 @@
   </head>
   <body>
     <div class="top-bar">
-      <button onclick="location.href='../index.html'">بازگشت</button>
+      <button onclick="location.href='/'">بازگشت</button>
     </div>
 
     <div class="main">
@@ -124,13 +124,10 @@
             <span style="color: #34d389">●</span> کمک به فقرا: ۴۰,۰۰۰,۰۰۰ تومان
           </div>
           <div>
-            <span style="color: #00fff2">●</span> کمک به مسجد: ۷۰,۰۰۰,۰۰۰ تومان
+            <span style="color: #f87171">●</span> کمک به مسجد: ۷۰,۰۰۰,۰۰۰ تومان
           </div>
           <div>
             <span style="color: #facc15">●</span> موجودی صندوق: ۷۰,۰۰۰,۰۰۰ تومان
-          </div>
-          <div>
-            <span style="color: #f87171">●</span> وام داده‌شده: ۲۰,۰۰۰,۰۰۰ تومان
           </div>
         </div>
       </div>
@@ -172,53 +169,103 @@
         </div>
       </div>
       <script>
-        const ctx = document.getElementById("walletChart").getContext("2d");
-        new Chart(ctx, {
-          type: "doughnut",
-          data: {
-            labels: [
-              "کمک به فقرا",
-              "کمک به مسجد",
-              "موجودی صندوق",
-              "وام داده‌شده",
-            ],
-            datasets: [
-              {
-                data: [40000000, 70000000, 70000000, 20000000],
-                backgroundColor: ["#34d389", "#00fff2", "#facc15", "#f87171"],
-                borderWidth: 0,
+        async function fetchData() {
+          try {
+            const response = await fetch("http://127.0.0.1:8000/api/inventory");
+            const data = await response.json();
+
+            const totalBalance =
+              data.mosque_donation_amount +
+              data.needy_donation_amount +
+              data.org_funds_amount;
+
+            document.querySelector(
+              ".chart-center-text div:nth-child(2)"
+            ).innerText = `${totalBalance.toLocaleString()} تومان`;
+            document.querySelector(
+              ".chart-labels div:nth-child(1)"
+            ).innerHTML = `<span style="color: #34d389">●</span> کمک به فقرا: ${data.needy_donation_amount.toLocaleString()} تومان`;
+            document.querySelector(
+              ".chart-labels div:nth-child(2)"
+            ).innerHTML = `<span style="color: #f87171">●</span> کمک به مسجد: ${data.mosque_donation_amount.toLocaleString()} تومان`;
+            document.querySelector(
+              ".chart-labels div:nth-child(3)"
+            ).innerHTML = `<span style="color: #facc15">●</span> موجودی صندوق: ${data.org_funds_amount.toLocaleString()} تومان`;
+
+            document.querySelector(
+              ".details-box p:nth-child(2) .highlight"
+            ).innerText = `${totalBalance.toLocaleString()} تومان`;
+            document.querySelector(
+              ".details-box p:nth-child(4) .highlight"
+            ).innerText = `${data.loan_funds_amount.toLocaleString()} تومان`;
+            document.querySelector(
+              ".details-box p:nth-child(6) .highlight"
+            ).innerText = `${(
+              data.loan_funds_amount - data.loan_funds_amount
+            ).toLocaleString()} تومان`;
+
+            const ctx = document.getElementById("walletChart").getContext("2d");
+            new Chart(ctx, {
+              type: "doughnut",
+              data: {
+                labels: [
+                  "کمک به فقرا",
+                  "کمک به مسجد",
+                  "موجودی صندوق",
+                  "وام داده‌شده",
+                ],
+                datasets: [
+                  {
+                    data: [
+                      data.needy_donation_amount,
+                      data.mosque_donation_amount,
+                      data.org_funds_amount,
+                    ],
+                    backgroundColor: ["#34d389", "#f87171", "#facc15"],
+                    borderWidth: 0,
+                  },
+                ],
               },
-            ],
-          },
-          options: {
-            cutout: "70%",
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: "rgba(0, 0, 0, 0.7)",
-                titleColor: "#fff", // رنگ عنوان سفید
-                bodyColor: "#fff", // رنگ متن سفید
-                borderColor: "rgba(255, 255, 255, 0.2)", // رنگ حاشیه سفید و کمرنگ
-                borderWidth: 1, // عرض حاشیه
-                padding: 12, // فضای داخلی بیشتر
-                caretSize: 8, // اندازه نوک مثلثی tooltip
-                displayColors: false, // حذف دایره‌های رنگی در tooltip
-                yAlign: "top", // موقعیت tooltip بالای دایره
-                callbacks: {
-                  label: function (context) {
-                    return (
-                      context.label +
-                      ": " +
-                      context.formattedValue.toLocaleString("fa-IR") +
-                      " تومان"
-                    );
+              options: {
+                cutout: "70%",
+                responsive: true,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    backgroundColor: "rgba(0, 0, 0, 0.7)",
+                    titleColor: "#fff",
+                    bodyColor: "#fff",
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                    borderWidth: 2,
+                    padding: 12,
+                    caretSize: 8,
+                    displayColors: false,
+                    yAlign: "top",
+                    xAlign: "center",
+                    position: "nearest",
+                    mode: "nearest",
+                    intersect: false,
+                    callbacks: {
+                      label: function (context) {
+                        return (
+                          context.label +
+                          ": " +
+                          context.formattedValue.toLocaleString("fa-IR") +
+                          " تومان"
+                        );
+                      },
+                    },
                   },
                 },
               },
-            },
-          },
-        });
+            });
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          }
+        }
+        window.onload = fetchData;
       </script>
+
       <body />
       <html />
     </div>
