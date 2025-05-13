@@ -21,13 +21,19 @@ def login_view(request):
 
 # --------------------------------------------
 from django.db.models import Sum
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
+from django.shortcuts import render, get_object_or_404
+from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import CustomUser, Transaction, Inventory, Loan, Account
-from .serializers import CreateInventorySerializer
+from .serializers import (
+    LoanSerializer,
+    TransactionSerializer,
+    AccountListSerializer,
+    AccountDetailSerializer,
+    CustomUserSerializer,
+)
 
 
 def home(request):
@@ -38,16 +44,56 @@ def needy_menu(request):
     return render(request, "needy/menu.html")
 
 
-def org_menu(request):
-    return render(request, "organization/menu.html")
-
-
 def needy_payment(request):
     return render(request, "needy/payment.html")
 
 
+def needy_report(request):
+    return render(request, "needy/report.html")
+
+
+def org_menu(request):
+    return render(request, "organization/menu.html")
+
+
 def org_payment(request):
     return render(request, "organization/payment.html")
+
+
+def org_report(request):
+    return render(request, "organization/report.html")
+
+
+def totall_balance(request):
+    return render(request, "totall_balance/balance.html")
+
+
+def cash_box_menu(request):
+    return render(request, "cash_box/menu.html")
+
+
+def loan_menu(request):
+    return render(request, "loan/menu.html")
+
+
+def account(request):
+    return render(request, "cash_box/account.html")
+
+
+def account_detail(request, id):
+    return render(request, "cash_box/account_detail.html", {"national_code": id})
+
+
+def account_new(request):
+    return render(request, "cash_box/new.html")
+
+
+def loan_request(request):
+    return render(request, "loan/request.html")
+
+
+def loan_list(request):
+    return render(request, "loan/active.html")
 
 
 class NeedyDonationAmountView(APIView):
@@ -78,25 +124,23 @@ class DepositWithdrawAPI(APIView):
     def post(self, request, action):
         inventory_type = request.data.get("inventory_type")
         amount = request.data.get("amount")
-        account_id = request.data.get("account", 1)
+        account_id = request.data.get("account", None)
         description = request.data.get("description", "")
+        type = request.data.get("type", None)
 
         amount = int("".join(amount.split(",")))
 
         inventory = get_object_or_404(Inventory, inventory_type=inventory_type)
-
-        if account_id:
-            account = get_object_or_404(Account, id=account_id)
-
+            
         if action == "deposit":
-            inventory.deposit(amount, account, description)
+            inventory.deposit(amount, type, account_id, description)
             return Response(
                 {"status": "Deposit successful"}, status=status.HTTP_201_CREATED
             )
 
         elif action == "withdraw":
             try:
-                inventory.withdraw(amount, account, description)
+                inventory.withdraw(amount, type, account_id, description)
                 return Response(
                     {"status": "Withdraw successful"}, status=status.HTTP_200_OK
                 )
@@ -106,3 +150,152 @@ class DepositWithdrawAPI(APIView):
                 )
 
         return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ReportAPIView(APIView):
+    def get(self, request, action):
+        if action == "donation":
+            reports = Transaction.objects.filter(mosque_donation=True)
+        elif action == "needy":
+            reports = Transaction.objects.filter(needy_donation=True)
+        elif action == "loan":
+            reports = Transaction.objects.filter(loan=True)
+        else:
+            reports = []
+        serialized_reports = TransactionSerializer(reports, many=True)
+
+        return Response({"reports": serialized_reports.data}, status=status.HTTP_200_OK)
+
+
+class InventoryViewSet(viewsets.ViewSet):
+    def list(self, request):
+        mosque_donation = Inventory.objects.filter(
+            inventory_type="MOSQUE_DONATION"
+        ).first()
+        needy_donation = Inventory.objects.filter(
+            inventory_type="NEEDY_DONATION"
+        ).first()
+        org_funds = Inventory.objects.filter(inventory_type="ORG_FUNDS").first()
+        loan_funds = Inventory.objects.filter(inventory_type="LOAN_FUNDS").first()
+
+        data = {
+            "mosque_donation_amount": mosque_donation.amount if mosque_donation else 0,
+            "needy_donation_amount": needy_donation.amount if needy_donation else 0,
+            "org_funds_amount": org_funds.amount if org_funds else 0,
+            "loan_funds_amount": loan_funds.amount if loan_funds else 0,
+        }
+
+        return Response(data)
+
+
+class AccountListView(APIView):
+    def get(self, request):
+        accounts = Account.objects.select_related("user").all()
+        serializer = AccountListSerializer(accounts, many=True)
+        return Response(serializer.data)
+
+
+class AccountDetailView(APIView):
+    def get(self, request, national_id):
+        account = (
+            Account.objects.select_related("user")
+            .prefetch_related("loan_borrower", "trans_account")
+            .filter(user__national_id=national_id)
+            .first()
+        )
+        serializer = AccountDetailSerializer(account)
+        return Response(serializer.data)
+
+    def put(self, request, national_id):
+        account = (
+            Account.objects.select_related("user")
+            .filter(user__national_id=national_id)
+            .first()
+        )
+        if not account:
+            return Response({"error": "Account not found"}, status=404)
+
+        user_data = request.data.get("user", {})
+        new_national_id = user_data.get("national_id")
+
+        if new_national_id and new_national_id != account.user.national_id:
+            if CustomUser.objects.filter(national_id=new_national_id).exists():
+                return Response({"error": "کد ملی تکراری است."}, status=400)
+
+        for field in [
+            "name",
+            "last_name",
+            "fathers_name",
+            "national_id",
+            "phone_number",
+            "birthday",
+            "address",
+            "postal_code",
+            "detail",
+        ]:
+            if field in user_data:
+                setattr(account.user, field, user_data[field])
+        account.user.save()
+
+        for field in ["signature", "account_number", "detail"]:
+            if field in request.data:
+                if field == "signature":
+                    signature = get_object_or_404(CustomUser, pk=request.data.get("signature"))
+                    setattr(account, field, signature)
+                    continue
+                setattr(account, field, request.data[field])
+        account.save()
+
+        serializer = AccountDetailSerializer(account)
+        return Response(serializer.data)
+
+
+class UserView(APIView):
+    def get(self, request):
+        users = CustomUser.objects.filter(is_active=True)
+        serializer = CustomUserSerializer(users, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        user_data = request.data.get("user", {})
+        national_id = user_data.get("national_id")
+        if CustomUser.objects.filter(national_id=national_id).exists():
+            return Response({"error": "کد ملی تکراری است."}, status=400)
+
+        try:
+            with transaction.atomic():
+                user = CustomUser.objects.create(
+                    name=user_data.get("name"),
+                    last_name=user_data.get("last_name"),
+                    fathers_name=user_data.get("father_name"),
+                    national_id=national_id,
+                    phone_number=user_data.get("phone"),
+                    birthday=user_data.get("birthdate"),
+                    address=user_data.get("address"),
+                    postal_code=user_data.get("postal_code"),
+                    detail=user_data.get("personal_details"),
+                )
+                signature = CustomUser.objects.all().first()
+                account = Account.objects.create(
+                    user=user,
+                    signature=signature,
+                    account_number=user_data.get("account_number"),
+                    detail=user_data.get("account_details"),
+                    system_message=user_data.get("system_message"),
+                )
+                balance = int(user_data.get("balance"))
+                inventory_type = Inventory.InventoryType.ORG_FUNDS
+                inventory = get_object_or_404(Inventory, inventory_type=inventory_type)
+                inventory.deposit(balance, Transaction.TransactionType.DEPOSIT, account.pk, "موجودی اولیه")
+                
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+        serializer = AccountDetailSerializer(account)
+        return Response(serializer.data, status=201)
+
+class LoanListAPIView(APIView):
+    def get(self, request):
+        loans = Loan.objects.all().order_by('-created_at')
+        serializer = LoanSerializer(loans, many=True)
+        return Response(serializer.data)
