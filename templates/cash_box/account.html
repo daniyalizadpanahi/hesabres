@@ -14,26 +14,28 @@
         padding: 0;
         box-sizing: border-box;
       }
+
       body {
         font-family: "Vazirmatn", sans-serif;
         background: linear-gradient(135deg, #1e3c72, #007dd1);
-        height: 100vh;
+        min-height: 100vh;
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
+        padding: 40px 0;
       }
 
       .container {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 30px;
         background-color: #ffffff10;
         padding: 40px;
         border-radius: 20px;
         backdrop-filter: blur(10px);
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
         width: 80%;
-        max-width: 80%;
+        max-width: 1000px;
       }
 
       .top-bar {
@@ -44,20 +46,21 @@
       }
 
       .top-bar button {
-        padding: 10px 20px;
+        padding: 12px 25px;
         font-size: 18px;
         font-weight: bold;
         border: none;
-        border-radius: 12px;
+        border-radius: 10px;
         background-color: #ffffff;
-        color: #000000;
+        color: #333;
         cursor: pointer;
         transition: all 0.3s ease;
       }
+
       .top-bar button:hover {
-        background-color: #89ffff;
+        background-color: #1e90ff;
         transform: translateY(-3px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
       }
 
       table {
@@ -65,30 +68,38 @@
         border-collapse: collapse;
         margin-top: 3%;
       }
+
       th,
       td {
-        padding: 12px;
+        padding: 16px 12px;
         text-align: right;
-        font-size: 18px;
+        font-size: 16px;
       }
+
       th {
-        background-color: #fcfcfc;
-        color: #000000;
-        font-size: 20px;
-        /* color: #fff; */
-      }
-      td {
+        background-color: #3e57a7;
         color: #ffffff;
-        background-color: #ffffff20;
-        font-size: 20px;
-        font-weight: bold;
+        font-size: 18px;
+        border-radius: 8px;
       }
+
+      td {
+        color: #fff;
+        background-color: #2e3b6b;
+        font-size: 18px;
+        font-weight: 500;
+        border-radius: 8px;
+      }
+
       tr:nth-child(even) td {
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(255, 255, 255, 0.1);
       }
+
       tr:hover td {
-        background-color: #2a5298;
+        background-color: #2980b9;
         cursor: pointer;
+        transform: scale(1.05);
+        transition: all 0.2s ease-in-out;
       }
 
       .search-container {
@@ -98,18 +109,28 @@
 
       .search-container input {
         padding: 12px;
-        font-size: 18px;
-        width: 80%;
-        max-width: 400px;
+        font-size: 20px;
+        font-weight: bold;
+        width: 100%;
+        min-width: 400px;
         border-radius: 10px;
-        border: none;
+        border: 2px solid #34495e;
         background-color: #ffffff;
-        color: #000000;
+        color: #333;
+        direction: rtl;
       }
+      
 
       .highlight {
         color: #a5f3fc;
         font-weight: bold;
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        background-color: #34495e;
+        z-index: 2;
       }
     </style>
   </head>
@@ -121,7 +142,7 @@
           <input
             type="text"
             id="search"
-            placeholder="جستجو بر اساس اسم یا شماره حساب"
+            placeholder="جستجو بر اساس اسم، شماره حساب و کد ملی"
             oninput="searchTable()"
           />
         </div>
@@ -130,6 +151,7 @@
       <table id="loanTable">
         <thead>
           <tr>
+            <th>ردیف</th>
             <th>شماره حساب</th>
             <th>نام و نام خانوادگی</th>
             <th>تاریخ افتتاح حساب</th>
@@ -138,32 +160,7 @@
             <th>فعال/غیرفعال</th>
           </tr>
         </thead>
-        <tbody>
-          <tr onclick="viewDetails('123456789')">
-            <td>123456789</td>
-            <td>محمود احمدی</td>
-            <td>1402/01/01</td>
-            <td>0012345678</td>
-            <td>25,000,000</td>
-            <td style="color: #4caf50; font-weight: bold">فعال</td>
-          </tr>
-          <tr onclick="viewDetails('987654321')">
-            <td>987654321</td>
-            <td>علی محمدی</td>
-            <td>1401/11/15</td>
-            <td>0087654321</td>
-            <td>8,000,000</td>
-            <td style="color: #f44336; font-weight: bold">غیرفعال</td>
-          </tr>
-          <tr onclick="viewDetails('112233445')">
-            <td>112233445</td>
-            <td>سارا نیکو</td>
-            <td>1402/03/10</td>
-            <td>0077889900</td>
-            <td>12,500,000</td>
-            <td style="color: #4caf50; font-weight: bold">فعال</td>
-          </tr>
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
 
@@ -177,8 +174,13 @@
           const cells = row.getElementsByTagName("td");
           const name = cells[1].textContent.toLowerCase();
           const account = cells[0].textContent.toLowerCase();
+          const nationalId = cells[3].textContent.toLowerCase();
 
-          if (name.includes(searchTerm) || account.includes(searchTerm)) {
+          if (
+            name.includes(searchTerm) ||
+            account.includes(searchTerm) ||
+            nationalId.includes(searchTerm)
+          ) {
             row.style.display = "";
           } else {
             row.style.display = "none";
@@ -187,8 +189,35 @@
       }
 
       function viewDetails(accountNumber) {
-        window.location.href = `/details?account=${accountNumber}`;
+        window.location.href = `account/${accountNumber}`;
       }
+
+      async function fetchAccounts() {
+        const res = await fetch("http://127.0.0.1:8000/api/account");
+        const data = await res.json();
+        const tbody = document.querySelector("#loanTable tbody");
+        tbody.innerHTML = "";
+
+        data.forEach((item, index) => {
+          const createdAt = new Date(item.created_at).toLocaleDateString("fa-IR");
+          const statusColor = item.is_active ? "#2ecc71" : "#e74c3c";
+          const statusText = item.is_active ? "فعال" : "غیرفعال";
+          const row = `
+            <tr onclick="viewDetails('${item.national_id}')">
+              <td>${index + 1}</td>
+              <td>${item.account_number}</td>
+              <td>${item.name} ${item.last_name}</td>
+              <td>${createdAt}</td>
+              <td>${item.national_id}</td>
+              <td>${item.balance.toLocaleString()}</td>
+              <td style="color: ${statusColor}; font-weight: bold">${statusText}</td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      }
+
+      fetchAccounts();
     </script>
   </body>
 </html>
