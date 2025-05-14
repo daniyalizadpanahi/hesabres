@@ -64,7 +64,6 @@ class Account(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     detail = models.TextField(null=True, blank=True)
     system_message = models.TextField(null=True, blank=True)
-    account_img = models.ImageField(upload_to='accounts/', null=True, blank=True)
 
     def __str__(self):
         return (
@@ -232,3 +231,21 @@ class Loan(models.Model):
 
     def __str__(self):
         return f"Loan for {self.borrower.account_number} - Amount: {self.amount} (Paid: {self.total_paid_amount})"
+
+class Image(models.Model):
+    REASON_CHOICES = [
+        ('account_info', 'Account Info'),
+        ('loan', 'Loan'),
+        ('loan_paid', 'Loan Paid'),
+        ('deposit', 'Deposit'),
+        ('withdraw', 'Withdraw'),
+    ]
+
+    model_name = models.CharField(max_length=255)
+    reason = models.CharField(max_length=255, choices=REASON_CHOICES)
+    field_id = models.PositiveIntegerField()
+    image = models.ImageField(upload_to='accounts/{}')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.model_name
