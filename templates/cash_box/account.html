@@ -34,8 +34,8 @@
         border-radius: 20px;
         backdrop-filter: blur(10px);
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-        width: 80%;
-        max-width: 1000px;
+        width: 90%;
+        max-width: 1200px;
       }
 
       .top-bar {
@@ -148,7 +148,7 @@
         </div>
       </div>
 
-      <table id="loanTable">
+      <table id="accountTable">
         <thead>
           <tr>
             <th>ردیف</th>
@@ -169,7 +169,7 @@
         const searchTerm = document
           .getElementById("search")
           .value.toLowerCase();
-        const rows = document.querySelectorAll("#loanTable tbody tr");
+        const rows = document.querySelectorAll("#accountTable tbody tr");
         rows.forEach((row) => {
           const cells = row.getElementsByTagName("td");
           const name = cells[1].textContent.toLowerCase();
@@ -195,7 +195,7 @@
       async function fetchAccounts() {
         const res = await fetch("http://127.0.0.1:8000/api/account");
         const data = await res.json();
-        const tbody = document.querySelector("#loanTable tbody");
+        const tbody = document.querySelector("#accountTable tbody");
         tbody.innerHTML = "";
 
         data.forEach((item, index) => {
