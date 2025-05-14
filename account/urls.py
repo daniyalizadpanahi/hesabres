@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     AccountImagesAPIView,
+    TransactionDeleteAPIView,
     account,
     account_detail,
     account_image_upload,
@@ -74,5 +75,6 @@ urlpatterns = [
         name="report",
     ),
     path("api/inventory", InventoryViewSet.as_view({"get": "list"}), name="inventory"),
+    path("api/transaction/delete/<int:pk>/", TransactionDeleteAPIView.as_view(), name="transaction-delete"),
     path("login/", login_view, name="login"),
 ]

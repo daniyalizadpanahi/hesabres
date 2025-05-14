@@ -344,7 +344,6 @@ class AccountImagesAPIView(APIView):
                 serializer = ImageSerializer(image_instances, many=True)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            # If this is for deleting images
             image_ids = request.data.get("image_ids", [])
 
             if image_ids:
@@ -358,3 +357,37 @@ class AccountImagesAPIView(APIView):
 
         except Account.DoesNotExist:
             return Response({"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND)
+
+class TransactionDeleteAPIView(APIView):
+    def delete(self, request, pk):
+        transaction = get_object_or_404(Transaction, pk=pk)
+
+        if transaction.mosque_donation:
+            inventory_type = Inventory.InventoryType.MOSQUE_DONATION
+        elif transaction.needy_donation:
+            inventory_type = Inventory.InventoryType.NEEDY_DONATION
+        elif transaction.loan:
+            inventory_type = Inventory.InventoryType.LOAN_FUNDS
+        elif transaction.account:
+            account = transaction.account
+            if transaction.type == "DEPOSIT":
+                account.balance -= transaction.amount
+            elif transaction.type == "WITHDRAW":
+                account.balance += transaction.amount
+            account.save()
+            transaction.delete()
+            return Response({"message": "Transaction deleted and account updated."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Transaction has no valid category."}, status=status.HTTP_400_BAD_REQUEST)
+
+        inventory = get_object_or_404(Inventory, inventory_type=inventory_type)
+
+        if transaction.type == "DEPOSIT":
+            inventory.amount -= transaction.amount
+        elif transaction.type == "WITHDRAW":
+            inventory.amount += transaction.amount
+
+        inventory.save()
+        transaction.delete()
+
+        return Response({"message": "Transaction deleted and inventory updated."}, status=status.HTTP_200_OK)
