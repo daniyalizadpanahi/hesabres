@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CustomUser, Account, Inventory, Transaction, Loan
+from .models import CustomUser, Account, Image, Inventory, Transaction, Loan
 
 
 class CustomUserAdmin(admin.ModelAdmin):
@@ -15,6 +15,18 @@ class CustomUserAdmin(admin.ModelAdmin):
     search_fields = ("national_id", "phone_number", "name")
     list_filter = ("is_active", "is_staff")
 
+
+class ImageAdmin(admin.ModelAdmin):
+    list_display = ('model_name', 'reason', 'field_id', 'image', 'created_at')
+    list_filter = ('reason', 'created_at')
+    search_fields = ('model_name', 'reason', 'field_id')
+    ordering = ('-created_at',)
+    list_per_page = 10
+
+    def image_preview(self, obj):
+        return f'<img src="{obj.image.url}" width="50" height="50" />'
+    image_preview.allow_tags = True
+    image_preview.short_description = 'Image Preview'
 
 class AccountAdmin(admin.ModelAdmin):
     list_display = ("pk", "account_number", "user", "balance", "is_active", "created_at")
@@ -67,3 +79,4 @@ admin.site.register(Account, AccountAdmin)
 admin.site.register(Inventory, InventoryAdmin)
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Loan, LoanAdmin)
+admin.site.register(Image, ImageAdmin)
