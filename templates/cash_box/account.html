@@ -194,7 +194,7 @@
 
       async function fetchAccounts() {
         const res = await fetch("http://127.0.0.1:8000/api/account");
-        const data = await res.json();
+        const data = (await res.json()).reverse();
         const tbody = document.querySelector("#accountTable tbody");
         tbody.innerHTML = "";
 
