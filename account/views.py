@@ -25,14 +25,17 @@ from django.shortcuts import render, get_object_or_404
 from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
-from .models import CustomUser, Transaction, Inventory, Loan, Account
+from .models import CustomUser, Image, Transaction, Inventory, Loan, Account
 from .serializers import (
+    ImageSerializer,
     LoanSerializer,
     TransactionSerializer,
     AccountListSerializer,
     AccountDetailSerializer,
     CustomUserSerializer,
+    # AccountImageUploadSerializer,
 )
 
 
@@ -84,6 +87,10 @@ def account_detail(request, id):
     return render(request, "cash_box/account_detail.html", {"national_code": id})
 
 
+def account_image_upload(request, account_number):
+    return render(request, "cash_box/account-document-image.html",  {"account_number": account_number})
+
+
 def account_new(request):
     return render(request, "cash_box/new.html")
 
@@ -94,7 +101,6 @@ def loan_request(request):
 
 def loan_list(request):
     return render(request, "loan/active.html")
-
 
 class NeedyDonationAmountView(APIView):
     def get(self, request):
@@ -299,3 +305,56 @@ class LoanListAPIView(APIView):
         loans = Loan.objects.all().order_by('-created_at')
         serializer = LoanSerializer(loans, many=True)
         return Response(serializer.data)
+    
+class AccountImagesAPIView(APIView):
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
+    def get(self, request, account_number):
+        try:
+            account = Account.objects.get(account_number=account_number)
+
+            images = Image.objects.filter(field_id=account.id, reason='account_info')
+
+            serializer = ImageSerializer(images, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except Account.DoesNotExist:
+            return Response({"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    def post(self, request, account_number):
+        try:
+            account = Account.objects.get(account_number=account_number)
+
+            if 'image' in request.FILES:
+                images = request.FILES.getlist('image')
+                model_name = "Account"
+                reason = "account_info"
+                field_id = account.id
+
+                image_instances = []
+                for img in images:
+                    image_instance = Image.objects.create(
+                        model_name=model_name,
+                        reason=reason,
+                        field_id=field_id,
+                        image=img
+                    )
+                    image_instances.append(image_instance)
+
+                serializer = ImageSerializer(image_instances, many=True)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+            # If this is for deleting images
+            image_ids = request.data.get("image_ids", [])
+
+            if image_ids:
+                images_to_delete = Image.objects.filter(pk__in=image_ids, field_id=account.id, reason='account_info')
+                deleted_count = images_to_delete.count()
+                images_to_delete.delete()
+
+                return Response({"detail": f"{deleted_count} image(s) deleted."}, status=status.HTTP_200_OK)
+            
+            return Response({"detail": "No action provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Account.DoesNotExist:
+            return Response({"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND)

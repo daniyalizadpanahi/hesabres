@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Account, CustomUser, Inventory, Loan, Transaction
+from .models import Account, CustomUser, Image, Inventory, Loan, Transaction
 
 
 class InventorySerializer(serializers.ModelSerializer):
@@ -130,6 +130,9 @@ class AccountDetailSerializer(serializers.ModelSerializer):
             "is_active",
             "transactions",
             "loans",
-            "account_img",
         ]
-
+class ImageSerializer(serializers.ModelSerializer):
+    url = serializers.ImageField(source="image")
+    class Meta:
+        model = Image
+        fields = ['id', 'created_at', 'url']

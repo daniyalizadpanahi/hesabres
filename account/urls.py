@@ -1,7 +1,9 @@
 from django.urls import path
 from .views import (
+    AccountImagesAPIView,
     account,
     account_detail,
+    account_image_upload,
     login_view,
     home,
     totall_balance,
@@ -25,6 +27,7 @@ from .views import (
     InventoryViewSet,
     AccountDetailView,
     UserView,
+    # AccountImageUploadView,
 )
 
 urlpatterns = [
@@ -41,12 +44,15 @@ urlpatterns = [
     path("organization/report", org_report, name="org_report"),
     path("organization/payment", org_payment, name="org_payment"),
     path("account", account, name="account_menu"),
+    path("account/<str:account_number>/image", account_image_upload, name="account_image_gallery"),
     path("account/new", account_new, name="new-account"),
     path("account/<str:id>", account_detail, name="account_info"),
+    
     path("api/users", UserView.as_view(), name="users"),
     path('api/loans/', LoanListAPIView.as_view(), name='loan-list'),
     path("api/account/<str:national_id>", AccountDetailView.as_view(), name="account_detail"),
     path("api/account", AccountListView.as_view(), name="account"),
+    path('api/account/<str:account_number>/image', AccountImagesAPIView.as_view(), name='account-images'),
     path(
         "api/needy-donation-amount/",
         NeedyDonationAmountView.as_view(),
