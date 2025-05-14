@@ -9,6 +9,8 @@
       href="https://cdn.jsdelivr.net/npm/vazirmatn@33.003.0/Vazirmatn-font-face.css"
       rel="stylesheet"
     />
+    <link rel="icon" href="/path/to/your/favicon.ico" />
+
     <style>
       * {
         margin: 0;
@@ -185,8 +187,7 @@
       }
       .signiture-button {
         align-self: absolute;
-        background-color: #b4b4b4;
-        background-color: #b4b4b4;
+        background-color: #00e0d3;
         color: #000;
         border: none;
         padding: 12px 24px;
@@ -340,8 +341,8 @@
             </div>
           </div>
 
-          <button class="signiture-button" onclick="openPopup('popup2')">
-            عکس فرم حساب
+          <button class="signiture-button" onclick="location.href='#'">
+            اسناد
           </button>
 
           <button class="save-button" onclick="updateData()">
@@ -401,59 +402,7 @@
           padding: 20px;
           z-index: 1000;
         "
-      >
-        <div id="image-container">
-          <img
-            id="preview-image"
-            src=""
-            alt="تصویر حساب"
-            style="display: none; width: 300px; height: auto; cursor: pointer"
-          />
-          <input
-            type="file"
-            id="image-upload"
-            accept="image/*"
-            style="display: none"
-          />
-          <button
-            id="upload-button"
-            style="
-              display: none;
-              margin-top: 255px;
-              width: 50px;
-              height: 90px;
-              z-index: 100;
-            "
-          >
-            آپلود تصویر
-          </button>
-        </div>
-
-        <!-- Modal for full image -->
-        <div
-          id="image-modal"
-          style="
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            justify-content: center;
-            align-items: center;
-          "
-        >
-          <img
-            id="full-image"
-            src=""
-            style="max-width: 100%; max-height: 100%"
-          />
-        </div>
-        <button onclick="closePopup('popup2')" style="margin-top: 25px">
-          بستن
-        </button>
-      </div>
+      ></div>
     </div>
 
     <script>
@@ -485,6 +434,9 @@
         document.getElementById("input-detail").value = data.detail
         document.getElementById("balance").innerText =
           data.balance.toLocaleString()
+        document.querySelector(".signiture-button").onclick = function () {
+          location.href = `/account/${data.account_number}/image`
+        }
 
         const txTable = document.querySelector("#transactions tbody")
         if (txTable) {
@@ -522,63 +474,6 @@
             loanTable.innerHTML += row
           })
         }
-
-        // Image logic
-        const imageUrl = data.account_img
-          ? `http://127.0.0.1:8000${data.account_img}`
-          : null
-        const previewImg = document.getElementById("preview-image")
-        const uploadInput = document.getElementById("image-upload")
-        const uploadButton = document.getElementById("upload-button")
-        const imageModal = document.getElementById("image-modal")
-        const fullImage = document.getElementById("full-image")
-
-        console.log(imageUrl)
-        console.log("imageUrl")
-
-        if (imageUrl) {
-          previewImg.src = imageUrl
-          previewImg.style.display = "block"
-          uploadInput.style.display = "none"
-          uploadButton.style.display = "none"
-        } else {
-          previewImg.style.display = "none"
-          uploadInput.style.display = "block"
-          uploadButton.style.display = "inline-block"
-        }
-
-        previewImg.onerror = () => {
-          previewImg.style.display = "none"
-          uploadInput.style.display = "block"
-          uploadButton.style.display = "inline-block"
-        }
-
-        previewImg.addEventListener("click", () => {
-          fullImage.src = imageUrl
-          imageModal.style.display = "flex"
-        })
-
-        imageModal.addEventListener("click", () => {
-          imageModal.style.display = "none"
-        })
-
-        uploadButton.addEventListener("click", () => {
-          uploadInput.click()
-        })
-
-        uploadInput.addEventListener("change", (e) => {
-          const file = e.target.files[0]
-          if (file) {
-            const reader = new FileReader()
-            reader.onload = function (event) {
-              previewImg.src = event.target.result
-              previewImg.style.display = "block"
-              uploadInput.style.display = "none"
-              uploadButton.style.display = "none"
-            }
-            reader.readAsDataURL(file)
-          }
-        })
       }
 
       async function updateData() {
