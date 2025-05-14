@@ -28,7 +28,7 @@
         border-radius: 20px;
         backdrop-filter: blur(10px);
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-        width: 300px;
+        width: 400px;
       }
 
       input {
@@ -71,6 +71,11 @@
         font-weight: bold;
         font-size: 20;
       }
+
+      .rtl-placeholder::placeholder {
+        text-align: right;
+        direction: rtl;
+      }
     </style>
   </head>
 
@@ -81,8 +86,20 @@
       {% if error %}
       <p>{{ error }}</p>
       {% endif %}
-      <input type="text" name="username" placeholder="نام کاربری" required />
-      <input type="password" name="password" placeholder="رمز عبور" required />
+      <input
+        type="text"
+        name="username"
+        placeholder="نام کاربری"
+        required
+        class="rtl-placeholder"
+      />
+      <input
+        type="password"
+        name="password"
+        placeholder="رمز عبور"
+        required
+        class="rtl-placeholder"
+      />
       <button type="submit">ورود</button>
     </form>
   </body>
