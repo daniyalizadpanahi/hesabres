@@ -57,38 +57,39 @@
         overflow: hidden;
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
       }
-      
-      th, td {
+
+      th,
+      td {
         padding: 12px 20px;
         color: #ffffff;
         font-size: 16px;
         border: 1px solid #ffffff33;
         text-align: center;
       }
-      
+
       th {
         background-color: #3e57a7;
         font-weight: bold;
         text-transform: uppercase;
       }
-      
+
       td {
         background-color: #2e3b6b;
       }
-      
+
       tr:nth-child(even) td {
         background-color: #3a4b82;
       }
-      
+
       tr:hover td {
         background-color: #556f9a;
         cursor: pointer;
       }
-      
+
       .deposit {
         color: #4caf50;
       }
-      
+
       .withdraw {
         color: #f44336;
       }
@@ -137,7 +138,7 @@
   </head>
   <body>
     <div class="container">
-      <button class="back-button" onclick="location.href='/needy'" # سلام>
+      <button class="back-button" onclick="location.href='/needy'">
         بازگشت
       </button>
       <h1>گزارش واریز و برداشت فقرا</h1>
@@ -145,6 +146,7 @@
       <table>
         <thead>
           <tr>
+            <th>عملیات</th>
             <th>علت</th>
             <th>موجودی جدید</th>
             <th>موجودی قبلی</th>
@@ -160,7 +162,7 @@
 
     <script>
       async function fetchData() {
-        const response = await fetch("http://127.0.0.1:8000/api/report/needy/"); // استفاده از API جدید
+        const response = await fetch("http://127.0.0.1:8000/api/report/needy/");
         const data = await response.json();
         populateTable(data.reports);
       }
@@ -169,57 +171,85 @@
         const tableBody = document.querySelector("tbody");
 
         let transactions = [];
-
-        // دریافت تراکنش‌ها از دیتای API
-        reports.forEach((report) => {
-          transactions.push(report);
-        });
+        reports.forEach((report) => transactions.push(report));
 
         let previousBalance = 0;
         let rowIndex = 1;
 
-        // محاسبه موجودی قبلی و جدید از قدیمی‌ترین به جدیدترین تراکنش‌ها
         for (let i = 0; i < transactions.length; i++) {
           const report = transactions[i];
-
-          // تبدیل تاریخ میلادی به تاریخ شمسی
-          const createdAt = moment(report.created_at).format("jYYYY/jMM/jDD"); // فرمت شمسی
-
-          // محاسبه موجودی جدید
+          const createdAt = moment(report.created_at).format("jYYYY/jMM/jDD");
           const newBalance =
             report.type === "WITHDRAW"
               ? previousBalance - report.amount
               : previousBalance + report.amount;
 
-          // ایجاد ردیف جدید در جدول
           const newRow = document.createElement("tr");
           newRow.innerHTML = `
-          <td>${report.description || "-"}</td> <!-- علت -->
-            <td>${formatNumber(newBalance)}</td> <!-- موجودی جدید -->
-            <td>${formatNumber(previousBalance)}</td> <!-- موجودی قبلی -->
+            <td>
+              <button onclick="deleteTransaction(${report.id})" style="color: black; width:50px;">حذف</button>
+            </td>
+            <td>${report.description || "-"}</td>
+            <td>${formatNumber(newBalance)}</td>
+            <td>${formatNumber(previousBalance)}</td>
             <td class="${report.type === "WITHDRAW" ? "withdraw" : "deposit"}">
               ${report.type === "WITHDRAW" ? "برداشت" : "واریز"}
             </td>
-            <td>${formatNumber(report.amount)}</td> <!-- مبلغ -->
-            <td>${createdAt}</td> <!-- تاریخ شمسی -->
-            <td>${rowIndex}</td> <!-- شماره ردیف -->
+            <td>${formatNumber(report.amount)}</td>
+            <td>${createdAt}</td>
+            <td>${rowIndex}</td>
           `;
-
-          // اضافه کردن ردیف جدید به جدول
           tableBody.appendChild(newRow);
-
-          // به‌روزرسانی موجودی قبلی برای تراکنش بعدی
           previousBalance = newBalance;
-          rowIndex++; // شماره ردیف افزوده می‌شود
+          rowIndex++;
         }
 
-        // معکوس کردن ردیف‌ها برای نمایش از جدید به قدیم
         const rows = Array.from(tableBody.children);
         rows.reverse().forEach((row) => tableBody.appendChild(row));
       }
 
       function formatNumber(number) {
         return number.toLocaleString();
+      }
+
+      async function deleteTransaction(id) {
+        if (!confirm("آیا مطمئن هستید که می‌خواهید این تراکنش را حذف کنید؟"))
+          return;
+
+        const csrftoken = getCookie("csrftoken");
+
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/transaction/delete/${id}/`,
+          {
+            method: "DELETE",
+            headers: {
+              "X-CSRFToken": csrftoken,
+            },
+          }
+        );
+
+        if (response.ok) {
+          alert("تراکنش با موفقیت حذف شد.");
+          location.reload();
+        } else {
+          const data = await response.json();
+          alert("خطا در حذف تراکنش: " + data.error);
+        }
+      }
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+          const cookies = document.cookie.split(";");
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === name + "=") {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
       }
 
       fetchData();
