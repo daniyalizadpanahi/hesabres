@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>آپلود تصویر</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: linear-gradient(135deg, #1e3c72, #007dd1);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        background-color: #ffffff10;
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+        max-width: 500px;
+      }
+
+      input[type="file"] {
+        padding: 10px;
+        border: 2px dashed #fff;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .preview-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .preview-item {
+        position: relative;
+        width: 80px;
+        height: 80px;
+      }
+
+      .preview-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #fff;
+        cursor: pointer;
+      }
+
+      .remove-btn {
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        background: red;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .upload-button {
+        padding: 15px 30px;
+        font-size: 20px;
+        border: none;
+        border-radius: 12px;
+        background-color: #ffffff;
+        color: #000000;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+      }
+
+      .upload-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .lightbox {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .lightbox img {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+        cursor: pointer;
+      }
+
+      .lightbox .close-btn {
+        position: absolute;
+        top: 20px;
+        font-size: 20px;
+        right: 20px;
+        background: red;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 100px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .gallery-container {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 10px 0;
+      }
+
+      .gallery-item {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        overflow: hidden;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 2px solid #fff;
+      }
+
+      .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+
+      .gallery-item:hover img {
+        transform: scale(1.1);
+      }
+
+      .back-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background-color: #ffffff;
+        color: #000000;
+        font-weight: bold;
+        font-size: 20px;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .back-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      }
+      
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button class="back-button" onclick="location.href='/'">بازگشت</button>
+      <h2 style="color: white; text-align: center">آپلود تصاویر</h2>
+      <input type="file" id="imageInput" multiple accept="image/*" />
+      <div class="preview-container" id="previewContainer"></div>
+      <button
+        onclick="uploadImages()"
+        id="confirmBtn"
+        class="upload-button hidden"
+      >
+        تایید و آپلود
+      </button>
+      <div class="gallery-container" id="galleryContainer"></div>
+    </div>
+
+    <div id="lightbox" class="lightbox">
+      <button class="close-btn" onclick="closeLightbox()">×</button>
+      <button
+        class="close-btn"
+        onclick="deleteImageFromLightbox()"
+        style="top: 60px; background: #d9534f; margin-top: 30px"
+      >
+        حذف عکس
+      </button>
+      <img
+        id="lightboxImage"
+        src=""
+        alt="Image Preview"
+        onclick="toggleZoom(event)"
+      />
+    </div>
+
+    <script>
+      const url = window.location.href
+      const regex = /\/account\/([^\/]+)\/image/
+      const match = url.match(regex)
+      const accountNumber = match ? match[1] : null
+      const API_URL = `/api/account/${accountNumber}/image`
+      let currentImageId = null
+      let selectedFiles = []
+      let isZoomed = false
+
+      document
+        .getElementById("imageInput")
+        .addEventListener("change", function (e) {
+          const files = Array.from(e.target.files)
+          selectedFiles = [...selectedFiles, ...files]
+          updatePreview()
+          document.getElementById("confirmBtn").classList.remove("hidden")
+        })
+
+      function updatePreview() {
+        const previewContainer = document.getElementById("previewContainer")
+        previewContainer.innerHTML = ""
+        selectedFiles.forEach((file, index) => {
+          const reader = new FileReader()
+          reader.onload = function (e) {
+            const previewItem = document.createElement("div")
+            previewItem.className = "preview-item"
+            previewItem.innerHTML = `<img src="${e.target.result}" class="preview-image" onclick="openLightbox('${e.target.result}')">
+               <div class="remove-btn" onclick="removeImage(${index})">×</div>`
+            previewContainer.appendChild(previewItem)
+          }
+          reader.readAsDataURL(file)
+        })
+      }
+
+      function removeImage(index) {
+        selectedFiles.splice(index, 1)
+        updatePreview()
+        if (selectedFiles.length === 0) {
+          document.getElementById("confirmBtn").classList.add("hidden")
+        }
+      }
+
+      async function uploadImages() {
+        const formData = new FormData()
+        selectedFiles.forEach((file) => {
+          formData.append("image", file)
+        })
+
+        const csrfToken = document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute("content")
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            body: formData,
+            headers: { "X-CSRFToken": csrfToken },
+          })
+
+          const text = await response.text()
+          let data = {}
+          try {
+            data = JSON.parse(text)
+          } catch {
+            data.detail = text
+          }
+
+          if (response.ok) {
+            // alert(data || "تصاویر با موفقیت آپلود شدند!");
+            resetForm()
+            window.location.reload()
+          } else {
+            throw new Error(data.errors || data.detail || "خطا در آپلود تصاویر")
+          }
+        } catch (error) {
+          alert(error.message)
+        }
+      }
+
+      function resetForm() {
+        selectedFiles = []
+        document.getElementById("previewContainer").innerHTML = ""
+        document.getElementById("imageInput").value = ""
+        document.getElementById("confirmBtn").classList.add("hidden")
+      }
+
+      function openLightbox(imageSrc, imageId = null) {
+        const lightbox = document.getElementById("lightbox")
+        const lightboxImage = document.getElementById("lightboxImage")
+        lightboxImage.src = imageSrc
+        currentImageId = imageId
+        lightbox.style.display = "flex"
+      }
+
+      function closeLightbox() {
+        document.getElementById("lightbox").style.display = "none"
+        isZoomed = false
+        document.getElementById("lightboxImage").style.transform = "scale(1)"
+      }
+
+      function toggleZoom(event) {
+        const lightboxImage = document.getElementById("lightboxImage")
+        if (isZoomed) {
+          lightboxImage.style.transform = "scale(1)"
+        } else {
+          const rect = lightboxImage.getBoundingClientRect()
+          const offsetX = event.clientX - rect.left
+          const offsetY = event.clientY - rect.top
+          const xPercent = (offsetX / lightboxImage.width) * 100
+          const yPercent = (offsetY / lightboxImage.height) * 100
+          lightboxImage.style.transformOrigin = `${xPercent}% ${yPercent}%`
+          lightboxImage.style.transform = "scale(2)"
+        }
+        isZoomed = !isZoomed
+      }
+
+      async function loadImages() {
+        try {
+          const response = await fetch(API_URL)
+          if (!response.ok) throw new Error("خطا در دریافت تصاویر")
+          const images = await response.json()
+          const galleryContainer = document.getElementById("galleryContainer")
+          galleryContainer.innerHTML = ""
+          images.forEach((image) => {
+            const item = document.createElement("div")
+            item.className = "gallery-item"
+            const img = document.createElement("img")
+            img.src = image.url
+            img.onclick = () => openLightbox(image.url, image.id)
+            item.appendChild(img)
+            galleryContainer.appendChild(item)
+          })
+        } catch (error) {
+          console.error("Error loading images:", error)
+        }
+      }
+
+      loadImages()
+
+      async function deleteImageFromLightbox() {
+        if (!currentImageId) return alert("شناسه تصویر پیدا نشد.")
+
+        const confirmed = confirm(
+          "آیا مطمئن هستید که می‌خواهید این تصویر را حذف کنید؟"
+        )
+        if (!confirmed) return
+
+        const csrfToken = document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute("content")
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({ image_ids: [currentImageId] }), // داده‌ها به صورت JSON
+          })
+          console.log(JSON.stringify({ image_ids: [currentImageId] }))
+          const data = await response.json()
+
+          if (response.ok) {
+            closeLightbox()
+            loadImages()
+          } else {
+            throw new Error(data.detail || "خطا در حذف تصویر")
+          }
+        } catch (error) {
+          alert(error.message)
+        }
+      }
+    </script>
+  </body>
+</html>
