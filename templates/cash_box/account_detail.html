@@ -361,6 +361,7 @@
               <th>نوع</th>
               <th>توضیحات</th>
               <th>تاریخ</th>
+              <th>عملیات</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -448,9 +449,14 @@
                 <td>${tx.amount.toLocaleString()} تومان</td>
                 <td class="${tx.type === "DEPOSIT" ? "deposit" : "withdraw"}">
                   ${tx.type === "DEPOSIT" ? "واریز" : "برداشت"}
-                </td>
-                <td>${tx.description || "-"}</td>
-                <td>${new Date(tx.created_at).toLocaleDateString("fa-IR")}</td>
+                  </td>
+                  <td>${tx.description || "-"}</td>
+                  <td>${new Date(tx.created_at).toLocaleDateString("fa-IR")}</td>
+                  <td>
+                <button onclick="deleteTransaction(${
+                  tx.id
+                })" style="color: black; width:50px;">حذف</button>
+              </td>
               </tr>`
             txTable.innerHTML += row
           })
@@ -572,6 +578,47 @@
 
       function closePopup(id) {
         document.getElementById(id).style.display = "none"
+      }
+      async function deleteTransaction(id) {
+        if (!confirm("آیا مطمئن هستید که می‌خواهید این تراکنش را حذف کنید؟"))
+          return
+
+        const csrftoken = getCookie("csrftoken")
+
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/transaction/delete/${id}/`,
+          {
+            method: "DELETE",
+            headers: {
+              "X-CSRFToken": csrftoken,
+            },
+          }
+        )
+
+        if (response.ok) {
+          alert("تراکنش با موفقیت حذف شد.")
+          location.reload()
+        } else {
+          const data = await response.json()
+          alert("خطا در حذف تراکنش: " + data.error)
+        }
+      }
+
+      function getCookie(name) {
+        let cookieValue = null
+        if (document.cookie && document.cookie !== "") {
+          const cookies = document.cookie.split(";")
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim()
+            if (cookie.substring(0, name.length + 1) === name + "=") {
+              cookieValue = decodeURIComponent(
+                cookie.substring(name.length + 1)
+              )
+              break
+            }
+          }
+        }
+        return cookieValue
       }
     </script>
   </body>
