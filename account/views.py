@@ -21,6 +21,7 @@ def login_view(request):
 
 # --------------------------------------------
 from django.db.models import Sum
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from django.db import transaction
 from rest_framework import viewsets, status
@@ -38,67 +39,67 @@ from .serializers import (
     # AccountImageUploadSerializer,
 )
 
-
+@login_required(login_url='/login/')
 def home(request):
     return render(request, "index.html")
 
-
+@login_required(login_url='/login/')
 def needy_menu(request):
     return render(request, "needy/menu.html")
 
-
+@login_required(login_url='/login/')
 def needy_payment(request):
     return render(request, "needy/payment.html")
 
-
+@login_required(login_url='/login/')
 def needy_report(request):
     return render(request, "needy/report.html")
 
-
+@login_required(login_url='/login/')
 def org_menu(request):
     return render(request, "organization/menu.html")
 
-
+@login_required(login_url='/login/')
 def org_payment(request):
     return render(request, "organization/payment.html")
 
-
+@login_required(login_url='/login/')
 def org_report(request):
     return render(request, "organization/report.html")
 
-
+@login_required(login_url='/login/')
 def totall_balance(request):
     return render(request, "totall_balance/balance.html")
 
-
+@login_required(login_url='/login/')
 def cash_box_menu(request):
     return render(request, "cash_box/menu.html")
 
-
+@login_required(login_url='/login/')
 def loan_menu(request):
     return render(request, "loan/menu.html")
 
-
+@login_required(login_url='/login/')
 def account(request):
     return render(request, "cash_box/account.html")
 
-
+@login_required(login_url='/login/')
 def account_detail(request, id):
     return render(request, "cash_box/account_detail.html", {"national_code": id})
 
-
+@login_required(login_url='/login/')
 def account_image_upload(request, account_number):
     return render(request, "cash_box/account-document-image.html",  {"account_number": account_number})
 
-
+@login_required(login_url='/login/')
 def account_new(request):
     return render(request, "cash_box/new.html")
 
-
+@login_required(login_url='/login/')
 def loan_request(request):
     return render(request, "loan/request.html")
 
-
+@login_required(login_url='/login/')
 def loan_list(request):
     return render(request, "loan/active.html")
 
