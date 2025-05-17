@@ -2,6 +2,7 @@
 <html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
     <title>لیست وام‌ها</title>
     <link
       href="https://cdn.jsdelivr.net/npm/vazirmatn@33.003.0/Vazirmatn-font-face.css"
@@ -12,7 +13,6 @@
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-        font-weight: bold;
       }
 
       body {
@@ -29,7 +29,7 @@
         display: flex;
         flex-direction: column;
         gap: 30px;
-        background-color: #ffffff10;
+        background-color: rgba(255, 255, 255, 0.1);
         padding: 40px;
         border-radius: 20px;
         backdrop-filter: blur(10px);
@@ -53,20 +53,20 @@
         gap: 10px;
       }
 
-      .search-container input,
-      .search-container select {
+      input,
+      select {
         padding: 12px;
-        font-size: 20px;
+        font-size: 16px;
         border-radius: 10px;
         border: 2px solid #34495e;
-        background-color: #ffffff;
+        background-color: #fff;
         color: #333;
         flex: 1;
       }
 
-      .top-bar button {
+      button {
         padding: 12px 25px;
-        font-size: 20px;
+        font-size: 16px;
         font-weight: bold;
         border: none;
         border-radius: 10px;
@@ -76,40 +76,37 @@
         transition: all 0.3s ease;
       }
 
-      .top-bar button:hover {
+      button:hover {
         background-color: #1e90ff;
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 20px;
+        margin-top: 10px;
       }
 
       th,
       td {
-        padding: 16px 12px;
+        padding: 14px 10px;
         text-align: center;
-        font-size: 19px;
+        font-size: 16px;
       }
 
       th {
         background-color: #3e57a7;
-        color: #ffffff;
-        border-radius: 8px;
+        color: #fff;
       }
 
       td {
         color: #fff;
         background-color: #2e3b6b;
-        font-weight: 500;
-        border-radius: 8px;
       }
 
       tr:nth-child(even) td {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.08);
       }
 
       tr:hover td {
@@ -119,12 +116,13 @@
       }
 
       .action-btn {
-        margin: 0 5px;
-        padding: 6px 12px;
+        margin: 0 3px;
+        padding: 6px 10px;
         border: none;
-        border-radius: 8px;
+        border-radius: 6px;
         cursor: pointer;
-        font-size: 18px;
+        font-size: 14px;
+        font-weight: bold;
       }
 
       .edit-btn {
@@ -134,14 +132,14 @@
 
       .delete-btn {
         background-color: #f87171;
-        color: white;
+        color: #fff;
       }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="top-bar">
-        <button onclick="window.history.back()">بازگشت</button>
+        <button type="button" onclick="history.back()">بازگشت</button>
         <div class="search-container">
           <input
             type="text"
@@ -176,80 +174,118 @@
     </div>
 
     <script>
-      let loans = [];
+      document.addEventListener("DOMContentLoaded", () => {
+        let loans = []
 
-      function searchLoans() {
-        const searchValue = document.getElementById("search").value.toLowerCase();
-        const status = document.getElementById("statusFilter").value;
+        const fetchLoans = async () => {
+          try {
+            const res = await fetch("/api/loan")
+            if (!res.ok) throw new Error("Network response was not ok")
+            loans = await res.json()
+            renderTable(loans)
+          } catch (err) {
+            console.error("Error fetching loans:", err)
+            alert("خطا در دریافت اطلاعات وام‌ها")
+          }
+        }
 
-        const filtered = loans.filter((l) => {
-          const matchesSearch =
-            l.borrower.name.toLowerCase().includes(searchValue) ||
-            l.borrower.national_id.includes(searchValue) ||
-            l.amount.toString().includes(searchValue);
+        function searchLoans() {
+          const searchValue = document
+            .getElementById("search")
+            .value.toLowerCase()
+          const status = document.getElementById("statusFilter").value
 
-          const matchesStatus =
-            status === "all" ||
-            (status === "active" && l.is_active) ||
-            (status === "inactive" && !l.is_active);
+          const filtered = loans.filter((l) => {
+            const name = l?.borrower?.name?.toLowerCase() || ""
+            const nationalId = l?.borrower?.national_id || ""
+            const amount = l?.amount?.toString() || ""
 
-          return matchesSearch && matchesStatus;
-        });
+            const matchesSearch =
+              name.includes(searchValue) ||
+              nationalId.includes(searchValue) ||
+              amount.includes(searchValue)
 
-        renderTable(filtered);
-      }
+            const matchesStatus =
+              status === "all" ||
+              (status === "active" && l.is_active) ||
+              (status === "inactive" && !l.is_active)
 
-      function renderTable(data) {
-        const tbody = document.querySelector("#loansTable tbody");
-        tbody.innerHTML = "";
-        data.forEach((item, index) => {
-          const row = `
+            return matchesSearch && matchesStatus
+          })
+
+          renderTable(filtered)
+        }
+
+        const renderTable = (data) => {
+          const tbody = document.querySelector("#loansTable tbody")
+          tbody.innerHTML = data
+            .map(
+              (loan, index) => `
             <tr>
               <td>${index + 1}</td>
-              <td>${item.borrower.name}</td>
-              <td>${item.borrower.national_id}</td>
-              <td>${Number(item.amount).toLocaleString()}</td>
-              <td>${Number(item.disbursed_amount).toLocaleString()}</td>
-              <td>${Number(item.monthly_installment).toLocaleString()}</td>
-              <td>${item.paid_months}</td>
-              <td style="color:${item.is_active ? '#2ecc71' : '#e74c3c'}; font-weight:bold">
-                ${item.is_active ? "فعال" : "غیرفعال"}
+              <td>${loan.borrower.name}</td>
+              <td>${loan.borrower.national_id}</td>
+              <td>${Number(loan.amount).toLocaleString()}</td>
+              <td>${Number(loan.disbursed_amount).toLocaleString()}</td>
+              <td>${Number(loan.monthly_installment).toLocaleString()}</td>
+              <td>${loan.paid_months}</td>
+              <td style="color: ${
+                loan.is_active ? "#2ecc71" : "#e74c3c"
+              }; font-weight: bold">
+                ${loan.is_active ? "فعال" : "غیرفعال"}
               </td>
               <td>
-                <button class="action-btn edit-btn" onclick="editLoan(${item.id})">ویرایش</button>
-                <button class="action-btn delete-btn" onclick="deleteLoan(${item.id})">حذف</button>
+                <button class="action-btn edit-btn" onclick="editLoan(${
+                  loan.id
+                })">ویرایش</button>
+                <button class="action-btn delete-btn" onclick="deleteLoan(${
+                  loan.id
+                }, event)">حذف</button>
               </td>
-            </tr>
-          `;
-          tbody.innerHTML += row;
-        });
-      }
-
-      function editLoan(id) {
-        window.location.href = `/loans/edit/${id}`;
-      }
-
-      async function deleteLoan(id) {
-        if (!confirm("آیا مطمئن هستید که می‌خواهید این وام را حذف کنید؟")) return;
-        const res = await fetch(`http://127.0.0.1:8000/api/loans/${id}`, {
-          method: "DELETE",
-        });
-        if (res.ok) {
-          loans = loans.filter((l) => l.id !== id);
-          searchLoans();
-        } else {
-          alert("خطا در حذف وام");
+            </tr>`
+            )
+            .join("")
         }
-      }
 
-      async function fetchLoans() {
-        const res = await fetch("http://127.0.0.1:8000/api/loans");
-        const data = await res.json();
-        loans = data;
-        renderTable(loans);
-      }
+        window.editLoan = (id) => {
+          location.href = `/loan/${id}`
+        }
 
-      fetchLoans();
+        window.deleteLoan = async (id, event) => {
+          if (!confirm("آیا مطمئن هستید که می‌خواهید این وام را حذف کنید؟"))
+            return
+
+          const btn = event.target
+          const original = btn.textContent
+
+          try {
+            btn.disabled = true
+            btn.textContent = "در حال حذف..."
+            const token = document.querySelector("[name=csrf-token]").content
+            const res = await fetch(`/api/loan/${id}`, {
+              method: "DELETE",
+              headers: {
+                "X-CSRFToken": token,
+              },
+            })
+
+            if (res.status === 204 || res.ok) {
+              loans = loans.filter((l) => l.id !== id)
+              searchLoans()
+            } else {
+              throw new Error(`خطا در حذف: ${res.status}`)
+            }
+          } catch (err) {
+            console.error("Error deleting loan:", err)
+            alert("خطا در حذف وام")
+          } finally {
+            btn.disabled = false
+            btn.textContent = original
+          }
+        }
+
+        fetchLoans()
+      })
     </script>
   </body>
 </html>
