@@ -123,7 +123,9 @@
   </head>
   <body>
     <div class="container">
-      <button class="back-button" onclick="window.history.back()">← بازگشت</button>
+      <button class="back-button" onclick="window.history.back()">
+        ← بازگشت
+      </button>
       <h2>ثبت وام جدید</h2>
 
       <div class="dropdown" id="borrower-dropdown">
@@ -150,10 +152,7 @@
           onclick="toggleDropdown('guarantor')"
         />
         <div class="dropdown-list" id="guarantor-list">
-          <input
-            placeholder="جستجو ضامن"
-            oninput="filterUsers('guarantor')"
-          />
+          <input placeholder="جستجو ضامن" oninput="filterUsers('guarantor')" />
           <div id="guarantor-items"></div>
         </div>
       </div>
@@ -174,7 +173,10 @@
       </div>
 
       <div class="info-row">
-        <input id="blocked-from-guarantor" placeholder="مسدود از ضامن؟ true/false" />
+        <input
+          id="blocked-from-guarantor"
+          placeholder="مسدود از ضامن؟ true/false"
+        />
         <input id="is-active" placeholder="فعال؟ true/false" />
       </div>
 
@@ -186,58 +188,58 @@
     </div>
 
     <script>
-      let users = [];
-      let selectedBorrowerId = null;
-      let selectedGuarantorId = null;
+      let users = []
+      let selectedBorrowerId = null
+      let selectedGuarantorId = null
 
       async function fetchUsers() {
         try {
-          const res = await fetch("http://127.0.0.1:8000/api/users");
-          users = await res.json();
-          renderUserList("borrower", users);
-          renderUserList("guarantor", users);
+          const res = await fetch("http://127.0.0.1:8000/api/users")
+          users = await res.json()
+          renderUserList("borrower", users)
+          renderUserList("guarantor", users)
         } catch (err) {
-          alert("خطا در دریافت کاربران");
+          alert("خطا در دریافت کاربران")
         }
       }
 
       function toggleDropdown(role) {
-        document.getElementById(`${role}-list`).classList.toggle("active");
+        document.getElementById(`${role}-list`).classList.toggle("active")
       }
 
       function renderUserList(role, data) {
-        const container = document.getElementById(`${role}-items`);
-        container.innerHTML = "";
+        const container = document.getElementById(`${role}-items`)
+        container.innerHTML = ""
         data.forEach((user) => {
-          const div = document.createElement("div");
-          div.className = "dropdown-item";
-          div.innerText = `${user.name} - ${user.national_id}`;
+          const div = document.createElement("div")
+          div.className = "dropdown-item"
+          div.innerText = `${user.name} - ${user.national_id}`
           div.onclick = () => {
-            document.getElementById(`${role}-input`).value = user.name;
+            document.getElementById(`${role}-input`).value = user.name
             role === "borrower"
               ? (selectedBorrowerId = user.id)
-              : (selectedGuarantorId = user.id);
-            document.getElementById(`${role}-list`).classList.remove("active");
-          };
-          container.appendChild(div);
-        });
+              : (selectedGuarantorId = user.id)
+            document.getElementById(`${role}-list`).classList.remove("active")
+          }
+          container.appendChild(div)
+        })
       }
 
       function filterUsers(role) {
         const keyword = document
           .querySelector(`#${role}-list input`)
-          .value.trim();
+          .value.trim()
         const filtered = users.filter(
           (u) => u.name.includes(keyword) || u.national_id.includes(keyword)
-        );
-        renderUserList(role, filtered);
+        )
+        renderUserList(role, filtered)
       }
 
       function getCSRFToken() {
         return document.cookie
           .split("; ")
           .find((row) => row.startsWith("csrftoken="))
-          ?.split("=")[1];
+          ?.split("=")[1]
       }
 
       function submitLoan() {
@@ -247,7 +249,8 @@
           guarantor_info: document.getElementById("guarantor-info").value,
           amount: document.getElementById("amount").value,
           disbursed_amount: document.getElementById("disbursed-amount").value,
-          monthly_installment: document.getElementById("monthly-installment").value,
+          monthly_installment: document.getElementById("monthly-installment")
+            .value,
           total_months: document.getElementById("total-months").value,
           paid_months: document.getElementById("paid-months").value,
           fees: document.getElementById("fees").value,
@@ -256,9 +259,9 @@
           is_active: document.getElementById("is-active").value === "true",
           detail: document.getElementById("detail").value,
           system_message: document.getElementById("system-message").value,
-        };
+        }
 
-        fetch("/api/loans", {
+        fetch("/api/loan", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -268,19 +271,19 @@
         })
           .then(async (res) => {
             if (!res.ok) {
-              const errorData = await res.json();
-              throw new Error(errorData.error || "خطا در ثبت وام");
+              const errorData = await res.json()
+              throw new Error(errorData.error || "خطا در ثبت وام")
             }
-            return res.json();
+            return res.json()
           })
           .then(() => {
-            alert("وام با موفقیت ثبت شد");
-            window.location.href = "/loans";
+            alert("وام با موفقیت ثبت شد")
+            window.location.href = "/loan"
           })
-          .catch((err) => alert(err.message));
+          .catch((err) => alert(err.message))
       }
 
-      document.addEventListener("DOMContentLoaded", fetchUsers);
+      document.addEventListener("DOMContentLoaded", fetchUsers)
     </script>
   </body>
 </html>
