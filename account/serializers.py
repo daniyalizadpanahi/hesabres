@@ -109,6 +109,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ["id", "name", "last_name", "national_id"]
 
+
 class AccountDetailSerializer(serializers.ModelSerializer):
     user = AccountUserSerializer()
     transactions = AccountTransactionSerializer(
@@ -132,8 +133,11 @@ class AccountDetailSerializer(serializers.ModelSerializer):
             "transactions",
             "loans",
         ]
+
+
 class ImageSerializer(serializers.ModelSerializer):
     url = serializers.ImageField(source="image")
+
     class Meta:
         model = Image
-        fields = ['id', 'created_at', 'url']
+        fields = ["id", "created_at", "url"]

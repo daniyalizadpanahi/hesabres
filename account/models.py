@@ -56,7 +56,9 @@ class Account(models.Model):
         CustomUser, on_delete=models.DO_NOTHING, related_name="acc_user"
     )
     signature = models.ForeignKey(
-        CustomUser, on_delete=models.DO_NOTHING, related_name="acc_signature",
+        CustomUser,
+        on_delete=models.DO_NOTHING,
+        related_name="acc_signature",
     )  # حق امضا
     account_number = models.CharField(max_length=200, unique=True)
     balance = models.BigIntegerField(default=0)
@@ -126,7 +128,7 @@ class Inventory(models.Model):
             account.save()
         else:
             account = None
-            
+
         self.amount -= amount
         self.save()
 
@@ -232,19 +234,20 @@ class Loan(models.Model):
     def __str__(self):
         return f"Loan for {self.borrower.account_number} - Amount: {self.amount} (Paid: {self.total_paid_amount})"
 
+
 class Image(models.Model):
     REASON_CHOICES = [
-        ('account_info', 'Account Info'),
-        ('loan', 'Loan'),
-        ('loan_paid', 'Loan Paid'),
-        ('deposit', 'Deposit'),
-        ('withdraw', 'Withdraw'),
+        ("account_info", "Account Info"),
+        ("loan", "Loan"),
+        ("loan_paid", "Loan Paid"),
+        ("deposit", "Deposit"),
+        ("withdraw", "Withdraw"),
     ]
 
     model_name = models.CharField(max_length=255)
     reason = models.CharField(max_length=255, choices=REASON_CHOICES)
     field_id = models.PositiveIntegerField()
-    image = models.ImageField(upload_to='accounts/{}')
+    image = models.ImageField(upload_to="accounts/{}")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

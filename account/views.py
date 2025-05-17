@@ -39,69 +39,95 @@ from .serializers import (
     # AccountImageUploadSerializer,
 )
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def home(request):
     return render(request, "index.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def needy_menu(request):
     return render(request, "needy/menu.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def needy_payment(request):
     return render(request, "needy/payment.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def needy_report(request):
     return render(request, "needy/report.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def org_menu(request):
     return render(request, "organization/menu.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def org_payment(request):
     return render(request, "organization/payment.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def org_report(request):
     return render(request, "organization/report.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def totall_balance(request):
     return render(request, "totall_balance/balance.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def cash_box_menu(request):
     return render(request, "cash_box/menu.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def loan_menu(request):
     return render(request, "loan/menu.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def account(request):
     return render(request, "cash_box/account.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def account_detail(request, id):
     return render(request, "cash_box/account_detail.html", {"national_code": id})
 
-@login_required(login_url='/login/')
-def account_image_upload(request, account_number):
-    return render(request, "cash_box/account-document-image.html",  {"account_number": account_number})
 
-@login_required(login_url='/login/')
+@login_required(login_url="/login/")
+def account_image_upload(request, account_number):
+    return render(
+        request,
+        "cash_box/account-document-image.html",
+        {"account_number": account_number},
+    )
+
+
+@login_required(login_url="/login/")
 def account_new(request):
     return render(request, "cash_box/new.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def loan_request(request):
     return render(request, "loan/request.html")
 
-@login_required(login_url='/login/')
+
+@login_required(login_url="/login/")
 def loan_list(request):
     return render(request, "loan/active.html")
+
+
+@login_required(login_url="/login/")
+def loan_item(request, id):
+    return render(request, "loan/loan_detail.html")
+
 
 class NeedyDonationAmountView(APIView):
     def get(self, request):
@@ -138,7 +164,7 @@ class DepositWithdrawAPI(APIView):
         amount = int("".join(amount.split(",")))
 
         inventory = get_object_or_404(Inventory, inventory_type=inventory_type)
-            
+
         if action == "deposit":
             inventory.deposit(amount, type, account_id, description)
             return Response(
@@ -247,7 +273,9 @@ class AccountDetailView(APIView):
         for field in ["signature", "account_number", "detail"]:
             if field in request.data:
                 if field == "signature":
-                    signature = get_object_or_404(CustomUser, pk=request.data.get("signature"))
+                    signature = get_object_or_404(
+                        CustomUser, pk=request.data.get("signature")
+                    )
                     setattr(account, field, signature)
                     continue
                 setattr(account, field, request.data[field])
@@ -293,41 +321,70 @@ class UserView(APIView):
                 balance = int(user_data.get("balance"))
                 inventory_type = Inventory.InventoryType.ORG_FUNDS
                 inventory = get_object_or_404(Inventory, inventory_type=inventory_type)
-                inventory.deposit(balance, Transaction.TransactionType.DEPOSIT, account.pk, "موجودی اولیه")
-                
+                inventory.deposit(
+                    balance,
+                    Transaction.TransactionType.DEPOSIT,
+                    account.pk,
+                    "موجودی اولیه",
+                )
+
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
         serializer = AccountDetailSerializer(account)
         return Response(serializer.data, status=201)
 
+
 class LoanListAPIView(APIView):
     def get(self, request):
-        loans = Loan.objects.all().order_by('-created_at')
+        loans = Loan.objects.all().order_by("-created_at")
         serializer = LoanSerializer(loans, many=True)
         return Response(serializer.data)
-    
+
+
+class LoanItemAPIView(APIView):
+    def get(self, request, id):
+        loan = get_object_or_404(Loan, pk=id)
+        serializer = LoanSerializer(loan)
+        return Response(serializer.data)
+
+    def put(self, request, id):
+        loan = get_object_or_404(Loan, pk=id)
+        serializer = LoanSerializer(loan, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        loan = get_object_or_404(Loan, pk=id)
+        loan.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class AccountImagesAPIView(APIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
-    
+
     def get(self, request, account_number):
         try:
             account = Account.objects.get(account_number=account_number)
 
-            images = Image.objects.filter(field_id=account.id, reason='account_info')
+            images = Image.objects.filter(field_id=account.id, reason="account_info")
 
             serializer = ImageSerializer(images, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        
+
         except Account.DoesNotExist:
-            return Response({"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND)
-    
+            return Response(
+                {"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
     def post(self, request, account_number):
         try:
             account = Account.objects.get(account_number=account_number)
 
-            if 'image' in request.FILES:
-                images = request.FILES.getlist('image')
+            if "image" in request.FILES:
+                images = request.FILES.getlist("image")
                 model_name = "Account"
                 reason = "account_info"
                 field_id = account.id
@@ -338,7 +395,7 @@ class AccountImagesAPIView(APIView):
                         model_name=model_name,
                         reason=reason,
                         field_id=field_id,
-                        image=img
+                        image=img,
                     )
                     image_instances.append(image_instance)
 
@@ -348,16 +405,26 @@ class AccountImagesAPIView(APIView):
             image_ids = request.data.get("image_ids", [])
 
             if image_ids:
-                images_to_delete = Image.objects.filter(pk__in=image_ids, field_id=account.id, reason='account_info')
+                images_to_delete = Image.objects.filter(
+                    pk__in=image_ids, field_id=account.id, reason="account_info"
+                )
                 deleted_count = images_to_delete.count()
                 images_to_delete.delete()
 
-                return Response({"detail": f"{deleted_count} image(s) deleted."}, status=status.HTTP_200_OK)
-            
-            return Response({"detail": "No action provided."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": f"{deleted_count} image(s) deleted."},
+                    status=status.HTTP_200_OK,
+                )
+
+            return Response(
+                {"detail": "No action provided."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         except Account.DoesNotExist:
-            return Response({"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
 
 class TransactionDeleteAPIView(APIView):
     def delete(self, request, pk):
@@ -377,9 +444,15 @@ class TransactionDeleteAPIView(APIView):
                 account.balance += transaction.amount
             account.save()
             transaction.delete()
-            return Response({"message": "Transaction deleted and account updated."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Transaction deleted and account updated."},
+                status=status.HTTP_200_OK,
+            )
         else:
-            return Response({"error": "Transaction has no valid category."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Transaction has no valid category."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         inventory = get_object_or_404(Inventory, inventory_type=inventory_type)
 
@@ -391,4 +464,7 @@ class TransactionDeleteAPIView(APIView):
         inventory.save()
         transaction.delete()
 
-        return Response({"message": "Transaction deleted and inventory updated."}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": "Transaction deleted and inventory updated."},
+            status=status.HTTP_200_OK,
+        )
