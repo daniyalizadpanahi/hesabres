@@ -2,11 +2,21 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import webbrowser
+import threading
+import time
 
+def open_browser():
+    time.sleep(3)
+    webbrowser.open("http://localhost:8000")
 
 def main():
     """Run administrative tasks."""
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hesabres.settings")
+    
+    if len(sys.argv) >= 2 and sys.argv[1] == 'runserver':
+        threading.Thread(target=open_browser, daemon=True).start()
+    
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -16,7 +26,6 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
     execute_from_command_line(sys.argv)
-
 
 if __name__ == "__main__":
     main()

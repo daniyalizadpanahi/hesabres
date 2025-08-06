@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>جزئیات حساب</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/vazirmatn@33.003.0/Vazirmatn-font-face.css"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-weight: bold;
+      }
+
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: linear-gradient(135deg, #1e3c72, #007dd1);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        direction: rtl;
+      }
+
+      .container {
+        display: grid;
+        grid-template-areas:
+          "user user"
+          "deposit transactions"
+          "loans loans";
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        overflow-y: auto;
+        padding: 32px;
+        max-height: 90vh;
+      }
+
+      .back-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 20px;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .back-button:hover {
+        background-color: #89ffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .section {
+        background-color: #ffffff10;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow-x: auto;
+      }
+
+      h2 {
+        margin-bottom: 20px;
+        border-bottom: 2px solid #ffffff;
+        padding-bottom: 10px;
+        font-size: 22px;
+        color: #ffffff;
+        text-align: center;
+      }
+
+      table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+        text-align: center;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      th,
+      td {
+        padding: 12px 20px;
+        color: #ffffff;
+        font-size: 20px;
+        border: 1px solid #ffffff33;
+        text-align: center;
+      }
+
+      th {
+        background-color: #3e57a7;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      td {
+        background-color: #2e3b6b;
+      }
+
+      tr:nth-child(even) td {
+        background-color: #3a4b82;
+      }
+
+      tr:hover td {
+        background-color: #556f9a;
+        cursor: pointer;
+      }
+
+      .deposit {
+        color: #4caf50;
+        font-weight: bold;
+      }
+
+      .withdraw {
+        color: #f44336;
+        font-weight: bold;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        font-size: 16px;
+        color: #ffffff;
+      }
+
+      .info-card {
+        background-color: #ffffff20;
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .info-row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: #ffffff;
+        font-weight: bold;
+      }
+
+      .info-row > div {
+        margin-bottom: 12px;
+      }
+
+      .info-card input {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        background-color: #ffffffdd;
+        color: #000;
+        font-size: 16px;
+      }
+
+      .save-button {
+        align-self: absolute;
+        background-color: #00e0d3;
+        color: #000;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .signiture-button:hover {
+        background-color: #00b7ac;
+      }
+      .signiture-button {
+        align-self: absolute;
+        background-color: #00e0d3;
+        color: #000;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #user-info {
+        grid-area: user;
+      }
+
+      .save-button:hover {
+        background-color: #00b7ac;
+      }
+
+      .popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #4caf50;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        color: white;
+        font-size: 18px;
+        text-align: center;
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .balance {
+        font-size: 36px;
+        color: #89ffff;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .currency {
+        font-size: 20px;
+        color: #ffffff;
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        color: #ffffff;
+      }
+
+      .loan-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        color: #ffffff;
+        font-size: 18px;
+      }
+
+      .loan-info-item {
+        background-color: #ffffff20;
+        padding: 16px;
+        border-radius: 12px;
+      }
+
+      .loan-info-label {
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #89ffff;
+      }
+
+      .loan-info-value {
+        font-weight: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button class="back-button" onclick="window.history.back()">
+        ← بازگشت
+      </button>
+
+      <div class="section">
+        <h2>پرداخت قسط</h2>
+        <div class="info-card">
+          <div class="info-row">
+            <input id="re-pay" placeholder="مبلغ را وارد کنید" />
+          </div>
+          <div class="info-row">
+            <button
+              class="save-button"
+              onclick="submitTransaction('withdraw')"
+            >
+              پرداخت
+            </button>
+          </div>
+        </div>
+        <div style="margin-top: 100px">
+          <h2>مبلغ باقی مانده</h2>
+          <div class="balance" id="balance">-</div>
+          <div class="currency">تومان</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>اطلاعات وام دریافتی</h2>
+        <div class="info-card">
+          <div class="loan-info">
+            <div class="loan-info-item">
+              <div class="loan-info-label">شناسه وام</div>
+              <div class="loan-info-value" id="loan-id">-</div>
+            </div>
+            <div class="loan-info-item">
+              <div class="loan-info-label">مبلغ وام</div>
+              <div class="loan-info-value" id="loan-amount">-</div>
+            </div>
+            <div class="loan-info-item">
+              <div class="loan-info-label">مبلغ پرداختی</div>
+              <div class="loan-info-value" id="loan-total-paid">-</div>
+            </div>
+            <div class="loan-info-item">
+              <div class="loan-info-label">قسط ماهانه</div>
+              <div class="loan-info-value" id="loan-monthly-installment">-</div>
+            </div>
+            <div class="loan-info-item">
+              <div class="loan-info-label">تعداد ماه ها</div>
+              <div class="loan-info-value" id="loan-total-months">-</div>
+            </div>
+            <div class="loan-info-item">
+              <div class="loan-info-label">ماه های پرداخت شده</div>
+              <div class="loan-info-value" id="loan-paid-months">-</div>
+            </div>
+            <div class="loan-info-item">
+              <div class="loan-info-label">کارمزد</div>
+              <div class="loan-info-value" id="loan-fees">-</div>
+            </div>
+            <div class="loan-info-item">
+              <div class="loan-info-label">مبلغ تخصیص یافته</div>
+              <div class="loan-info-value" id="loan-disbursed-amount">-</div>
+            </div>
+            <div class="loan-info-item">
+              <div class="loan-info-label">وضعیت</div>
+              <div class="loan-info-value" id="loan-status">-</div>
+            </div>
+            <div class="loan-info-item">
+              <div class="loan-info-label">تاریخ ایجاد</div>
+              <div class="loan-info-value" id="loan-created-at">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="popup" class="popup">
+        <div class="popup-content">
+          <p id="popup-message">تراکنش با موفقیت انجام شد</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const accountId = window.location.pathname
+        .split("/")
+        .filter(Boolean)
+        .pop()
+
+      let account_id
+
+      async function fetchData() {
+        try {
+          const loanRes = await fetch(
+            `http://127.0.0.1:8000/api/loan/${accountId}`
+          )
+          if (!loanRes.ok) throw new Error("خطا در دریافت اطلاعات وام")
+          const loanData = await loanRes.json()
+          const remainingAmount =
+            (loanData.amount || 0) - (loanData.total_paid_amount || 0)
+          document.getElementById("balance").innerText =
+            remainingAmount.toLocaleString("fa-IR")
+
+          // نمایش اطلاعات وام
+          document.getElementById("loan-id").textContent = loanData.id || "-"
+          document.getElementById("loan-amount").textContent =
+            (loanData.amount ? loanData.amount.toLocaleString("fa-IR") : "0") +
+            " تومان"
+          document.getElementById("loan-total-paid").textContent =
+            (loanData.total_paid_amount
+              ? loanData.total_paid_amount.toLocaleString("fa-IR")
+              : "0") + " تومان"
+          document.getElementById("loan-monthly-installment").textContent =
+            (loanData.monthly_installment
+              ? loanData.monthly_installment.toLocaleString("fa-IR")
+              : "0") + " تومان"
+          document.getElementById("loan-total-months").textContent =
+            loanData.total_months || "0"
+          document.getElementById("loan-paid-months").textContent =
+            loanData.paid_months || "0"
+          document.getElementById("loan-fees").textContent =
+            (loanData.fees ? loanData.fees.toLocaleString("fa-IR") : "0") +
+            " تومان"
+          document.getElementById("loan-disbursed-amount").textContent =
+            (loanData.disbursed_amount
+              ? loanData.disbursed_amount.toLocaleString("fa-IR")
+              : "0") + " تومان"
+          document.getElementById("loan-status").textContent =
+            loanData.is_active ? "فعال" : "غیرفعال"
+
+          // فرمت تاریخ به صورت فارسی
+          if (loanData.created_at) {
+            const date = new Date(loanData.created_at)
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }
+            document.getElementById("loan-created-at").textContent =
+              date.toLocaleDateString("fa-IR", options)
+          } else {
+            document.getElementById("loan-created-at").textContent = "-"
+          }
+
+        } catch (error) {
+          console.error("Error fetching data:", error)
+          showPopup("خطا در دریافت اطلاعات از سرور")
+        }
+      }
+
+      async function updateData() {
+        const body = {
+          user: {
+            name: document.getElementById("input-name").value,
+            last_name: document.getElementById("input-last-name").value,
+            national_id: document.getElementById("input-national-id").value,
+            birthday: document.getElementById("input-birthday").value,
+            phone_number: document.getElementById("input-phone").value,
+            address: document.getElementById("input-address").value,
+            detail: "updated user detail",
+          },
+          account_number: document.getElementById("input-account-number").value,
+          detail: document.getElementById("input-detail").value,
+          signature: 10,
+          account_img: document.getElementById("image-upload")?.value || "",
+        }
+
+        const csrfToken = document.querySelector("[name=csrf-token]").content
+
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:8000/api/loan/${accountId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+              },
+              body: JSON.stringify(body),
+            }
+          )
+
+          if (!response.ok) throw new Error("خطا در بروزرسانی اطلاعات")
+          showPopup("اطلاعات با موفقیت بروزرسانی شد.")
+          await fetchData()
+        } catch (error) {
+          console.error("Error updating data:", error)
+          showPopup("خطا در بروزرسانی اطلاعات: " + error.message)
+        }
+      }
+
+      function formatAmount(amount) {
+        return amount.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+      }
+
+      document.getElementById("re-pay").addEventListener("input", (e) => {
+        let value = e.target.value.replace(/,/g, "").replace(/\D/g, "")
+        e.target.value = formatAmount(value)
+      })
+
+      function submitTransaction(action) {
+        const amountInput = document.getElementById("re-pay")
+        const amount = amountInput.value.replace(/,/g, "")
+        if (!amount) return alert("مبلغ را وارد کنید.")
+
+        const data = {
+          amount,
+          inventory_type: "ORG_FUNDS",
+          type: "loan",
+          account: account_id,
+        }
+
+        const csrfToken = document.querySelector("[name=csrf-token]").content
+
+        fetch(`/api/inventory/${action}/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken,
+          },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((resData) => {
+            if (resData.error) return showPopup(`خطا: ${resData.error}`)
+            showPopup("تراکنش با موفقیت انجام شد.")
+            fetchData()
+          })
+          .catch(() => showPopup("خطا در ثبت تراکنش"))
+      }
+
+      function showPopup(message) {
+        const popup = document.getElementById("popup")
+        const popupMessage = document.getElementById("popup-message")
+        popupMessage.textContent = message
+        popup.style.display = "block"
+        setTimeout(() => {
+          popup.style.display = "none"
+        }, 3000)
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchData)
+    </script>
+  </body>
+</html>

@@ -341,6 +341,13 @@ class LoanListAPIView(APIView):
         serializer = LoanSerializer(loans, many=True)
         return Response(serializer.data)
 
+    def post(self, request):
+        serializer = LoanSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
 
 class LoanItemAPIView(APIView):
     def get(self, request, id):
